@@ -1,0 +1,116 @@
+---
+title: Introduction to Frappe Wiki
+description: Open source documentation and knowledge base platform built on Frappe Framework
+---
+
+<img
+  className="block"
+  src="https://github.com/user-attachments/assets/b4bedd31-96fe-4c07-aded-339eade4a7d1"
+  alt="Frappe Wiki Hero"
+/>
+
+## What is Frappe Wiki?
+
+Frappe Wiki is an open source wiki and knowledge base platform designed to serve dynamic, text-heavy content like documentation and internal knowledge bases. Built on the powerful Frappe Framework, it provides a delightful experience for both writers and readers.
+
+The platform was developed by Frappe to meet their own documentation needs. When they couldn't find a simple, clean, open source wiki for ERPNext documentation, they built Frappe Wiki from scratch. Today, it powers their user manuals, company policies, and more across their entire organization.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Create Wiki Pages" icon="file-text" href="/quickstart">
+    Easily create and organize wiki pages to manage and share knowledge systematically with hierarchical page structures.
+  </Card>
+  
+  <Card title="Markdown Authoring" icon="markdown" href="/guides/markdown-support">
+    Write and format content effortlessly using Markdown with a rich WYSIWYG editor powered by TipTap.
+  </Card>
+  
+  <Card title="Controlled Updates" icon="git-branch" href="/features/change-requests">
+    Implement GitBook-style change request workflows to review and approve edits before publishing.
+  </Card>
+  
+  <Card title="Revision History" icon="history" href="/guides/review-workflow">
+    Track all changes with complete revision history and rollback capabilities for content versioning.
+  </Card>
+  
+  <Card title="Powerful Search" icon="search" href="/features/search">
+    Built-in search powered by RedisSearch or SQLite for fast, accurate content discovery across your entire wiki.
+  </Card>
+  
+  <Card title="Attachments" icon="paperclip" href="/features/attachments">
+    Attach relevant files and documents directly to wiki pages for better context and resource sharing.
+  </Card>
+  
+  <Card title="Table of Contents" icon="list" href="/guides/creating-content">
+    Automatically generate navigable table of contents for enhanced readability and document structure.
+  </Card>
+  
+  <Card title="Custom Scripts" icon="code" href="/deployment/custom-scripts">
+    Customize wiki behavior and extend functionality using custom scripts configured in Wiki Settings.
+  </Card>
+  
+
+</CardGroup>
+
+## Built With Modern Technology
+
+Frappe Wiki is powered by a robust technology stack:
+
+<CardGroup cols={3}>
+  <Card title="Frappe Framework" icon="server">
+    Full-stack web application framework providing the backend foundation with Python.
+  </Card>
+  
+  <Card title="Vue.js & Frappe UI" icon="vuejs">
+    Modern frontend SPA built with Vue 3 and Frappe UI components for a smooth user experience.
+  </Card>
+  
+  <Card title="RedisSearch" icon="database">
+    Powerful search and indexing engine built on Redis for lightning-fast content search.
+  </Card>
+</CardGroup>
+
+### Architecture Highlights
+
+- **Backend**: Python-based Frappe app with DocTypes for Wiki Documents, Spaces, and Change Requests
+- **Frontend**: Vue 3 SPA with TipTap editor for rich markdown editing
+- **Search**: RedisSearch or SQLite-based full-text search
+- **Tree Structure**: Nested set model for hierarchical wiki organization
+- **Change Management**: Git-inspired revision and merge system for collaborative editing
+
+## Use Cases
+
+Frappe Wiki excels at:
+
+- **Product Documentation**: Create comprehensive user guides and API references
+- **Internal Knowledge Bases**: Centralize company policies, procedures, and best practices
+- **Team Wikis**: Collaborate on shared knowledge with approval workflows
+- **Public Documentation Sites**: Host open source project documentation with custom branding
+
+<Note>
+  Frappe Wiki maintains revision history and has a change approval mechanism, making it perfect for teams that need controlled content publishing.
+</Note>
+
+## Ready to Get Started?
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Create your first wiki page in minutes
+  </Card>
+  
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Set up Frappe Wiki locally or on Frappe Cloud
+  </Card>
+</CardGroup>
+
+## Open Source and Community
+
+Frappe Wiki is open source under the MIT License. Join the community:
+
+- **GitHub**: [frappe/wiki](https://github.com/frappe/wiki)
+- **Telegram**: [Frappe Wiki Community](https://t.me/frappewiki)
+- **Forum**: [Discuss Forum](https://discuss.frappe.io/c/wiki/72)
+- **YouTube**: [@frappetech](https://www.youtube.com/@frappetech)
+
+Contributions, bug reports, and feature requests are welcome!

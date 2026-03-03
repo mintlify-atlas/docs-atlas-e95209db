@@ -1,0 +1,463 @@
+---
+title: Collaboration
+description: Work together on documentation with roles, permissions, and participant tracking
+---
+
+## Overview
+
+Frappe Wiki provides comprehensive collaboration features that enable teams to work together on documentation projects. Through role-based permissions, change request workflows, and participant tracking, teams can efficiently create, review, and publish content.
+
+## Collaboration Model
+
+Frappe Wiki uses a **structured collaboration model** centered around Change Requests (CRs). This ensures all contributors work within a controlled, reviewable workflow.
+
+### Key Principles
+
+**No Direct Edits**  
+All changes, regardless of user role, must go through the Change Request workflow. This ensures:
+- Proper review and approval
+- Complete audit trail
+- Conflict detection and resolution
+
+**Role-Based Access**  
+Frappe's permission system controls who can create, edit, review, and merge changes.
+
+**Participant Tracking**  
+Change Requests track all contributors and their roles in the process.
+
+## User Roles
+
+Frappe Wiki defines four primary roles for collaboration:
+
+### System Manager
+
+Full administrative access to all Wiki features:
+- Create and configure Wiki Spaces
+- Manage all content and change requests
+- Configure Wiki Settings
+- Manage user permissions
+- Access all administrative functions
+
+### Wiki Manager
+
+Content management and oversight:
+- Create and manage Wiki Spaces
+- Create, edit, and delete Wiki Documents
+- Create and merge Change Requests
+- Assign reviewers and approve changes
+- Manage space-level settings
+
+<Note>
+Wiki Managers can merge their own Change Requests immediately if needed, though the review process is still recommended.
+</Note>
+
+### Wiki Approver
+
+Review and approval authority:
+- Create and edit content via Change Requests
+- Review and approve Change Requests
+- Provide feedback on proposed changes
+- Merge approved Change Requests
+- Cannot modify core Wiki settings
+
+### Wiki User
+
+Basic content contributor:
+- Create Change Requests for new content
+- Edit own Change Requests
+- View published documentation
+- Cannot review or merge changes
+- Read-only access to others' CRs
+
+<Accordion title="Role Permission Matrix">
+| Action | System Manager | Wiki Manager | Wiki Approver | Wiki User |
+|--------|---------------|--------------|---------------|------------|
+| Create Space | ✓ | ✓ | ✓ | - |
+| Configure Space | ✓ | ✓ | ✓ | - |
+| Create CR | ✓ | ✓ | ✓ | ✓ |
+| Edit Own CR | ✓ | ✓ | ✓ | ✓ |
+| Edit Others' CR | ✓ | ✓ | ✓ | - |
+| Review CR | ✓ | ✓ | ✓ | - |
+| Merge CR | ✓ | ✓ | ✓ | - |
+| View Published | ✓ | ✓ | ✓ | ✓ |
+| Admin Settings | ✓ | - | - | - |
+</Accordion>
+
+## Change Request Participants
+
+Each Change Request tracks participants and their roles through the **Wiki CR Participant** child table.
+
+### Participant Roles
+
+**Author**  
+The original creator of the Change Request. Typically the primary contributor to the changes.
+
+**Reviewer**  
+Users assigned to review and approve/reject the changes. Can also be tracked in the separate **Wiki CR Reviewer** table with detailed review status.
+
+**Contributor**  
+Users who have made edits or additions to the Change Request beyond the original author.
+
+**Viewer**  
+Users who are following the Change Request but not actively contributing or reviewing.
+
+### Adding Participants
+
+Participants can be added:
+- Automatically when creating a CR (author)
+- When assigning reviewers via `request_review()`
+- Manually through the CR form
+- Automatically when users edit the CR
+
+<Note>
+Participant tracking provides visibility into who is involved in each change, helping teams coordinate effectively.
+</Note>
+
+## Review Workflow
+
+The review process enables collaborative quality control before changes are published.
+
+<Steps>
+  <Step title="Author Creates CR">
+    A user creates a Change Request with initial changes and sets status to **Open** or **In Review**
+  </Step>
+  
+  <Step title="Assign Reviewers">
+    Author or manager assigns reviewers using `request_review(name, reviewers[])`
+    - Reviewers are added to the `reviewers` table
+    - Status for each reviewer: **Requested**
+  </Step>
+  
+  <Step title="Review and Feedback">
+    Each reviewer examines changes using the diff viewer:
+    - Reviews summary of changed pages
+    - Inspects detailed diffs for each page
+    - Leaves comments if needed
+  </Step>
+  
+  <Step title="Review Decision">
+    Reviewer submits decision via `review_action()`:
+    - **Approved**: Changes look good
+    - **Changes Requested**: Issues need addressing
+    - Optional comment explaining decision
+  </Step>
+  
+  <Step title="Address Feedback">
+    If changes requested:
+    - Author updates the CR
+    - Reviewers re-examine changes
+    - Process repeats until approved
+  </Step>
+  
+  <Step title="Merge">
+    Once approved by required reviewers:
+    - Manager/Approver triggers merge
+    - Changes apply to main tree
+    - CR status becomes **Merged**
+  </Step>
+</Steps>
+
+### Reviewer Tracking
+
+The **Wiki CR Reviewer** child table tracks detailed review status:
+
+```python
+Fields:
+- reviewer: Link to User (required)
+- status: Select (Requested | Approved | Changes Requested)
+- reviewed_at: Datetime (timestamp of review)
+- comment: Text (review feedback)
+```
+
+### Review Comments
+
+Reviewers can provide feedback through:
+- The `comment` field in Wiki CR Reviewer
+- Frappe's standard comment system on the CR document
+- External communication channels (linked in comments)
+
+## Concurrent Editing
+
+### Within a Change Request
+
+Multiple users can edit the same Change Request simultaneously:
+- Each edit updates the head revision
+- Autosave with debounce handles rapid changes
+- Last write wins for conflicting edits
+- Revision history maintained via `parent_revision` links
+
+<Warning>
+Frappe Wiki does not currently implement real-time collaborative editing (like Google Docs). If multiple users edit the same CR simultaneously, the last saved change will overwrite previous changes. Coordinate with your team to avoid conflicts.
+</Warning>
+
+### Across Change Requests
+
+Multiple Change Requests can be in progress simultaneously:
+- Each CR has its own isolated head revision
+- Changes don't interfere until merge time
+- 3-way merge detects conflicts between CRs
+- Merge conflicts must be resolved manually
+
+## Managing Conflicts
+
+When multiple CRs modify the same content, conflicts may arise during merge.
+
+### Conflict Types
+
+**Content Conflicts**  
+Both main tree and CR edited the same document content:
+- Base: Original content
+- Ours: Main tree changes
+- Theirs: CR changes
+- Resolution: Choose one or manually merge
+
+**Metadata Conflicts**  
+Incompatible changes to page metadata (title, slug, parent, etc.):
+- Field-level comparison
+- Resolution per field
+
+**Tree Conflicts**  
+Conflicting moves or reorders:
+- Both sides moved same page
+- Conflicting order_index changes
+- Resolution: Choose final tree position
+
+### Conflict Resolution Process
+
+<Steps>
+  <Step title="Detect Conflicts">
+    During merge, the system creates Wiki Merge Conflict records for each conflict
+  </Step>
+  
+  <Step title="Review Conflicts">
+    Merger reviews each conflict:
+    - Examines base/ours/theirs payloads
+    - Understands both sets of changes
+  </Step>
+  
+  <Step title="Choose Resolution">
+    For each conflict, select:
+    - **ours**: Keep main tree version
+    - **theirs**: Accept CR version
+    - **manual**: Provide custom resolution payload
+  </Step>
+  
+  <Step title="Apply Resolution">
+    System updates conflict record:
+    - Sets resolution type
+    - Stores resolved_payload
+    - Marks status as Resolved
+    - Records resolver and timestamp
+  </Step>
+  
+  <Step title="Retry Merge">
+    Once all conflicts resolved, merge can proceed with resolved versions
+  </Step>
+</Steps>
+
+<Note>
+See [Change Requests - Conflict Resolution](/features/change-requests#conflict-resolution) for detailed technical information.
+</Note>
+
+## Guest Access
+
+Wiki Spaces and Documents can be configured for guest (unauthenticated) access.
+
+### Space-Level Control
+
+Wiki Settings provides `disable_guest_access` flag:
+- When enabled: All wiki content requires login
+- When disabled: Published content visible to guests (respecting document privacy)
+
+### Document-Level Control
+
+**is_published**  
+- `0`: Not visible to anyone except authenticated users with permissions
+- `1`: Visible according to privacy settings
+
+**is_private**  
+- `0`: Guests can view if published
+- `1`: Requires authentication even if published
+
+### Guest Restrictions
+
+Guest users:
+- Can view public, published content
+- Cannot create Change Requests
+- Cannot edit any content
+- Cannot view drafts or unpublished pages
+- Blocked with `PermissionError` on private pages
+
+## Team Workflows
+
+### Small Team Workflow
+
+For teams of 2-5 people:
+1. Contributors create CRs for all changes
+2. One designated approver reviews all CRs
+3. Quick review cycles (hours, not days)
+4. Merge directly after approval
+
+### Large Team Workflow
+
+For teams of 10+ people:
+1. Contributors create focused, small CRs
+2. Multiple reviewers assigned by topic area
+3. Require 2+ approvals before merge
+4. Designated merge window (e.g., daily at 2pm)
+5. Conflict resolution by senior team members
+
+### Open Source Workflow
+
+For public documentation projects:
+1. External contributors create CRs (need Wiki User role)
+2. Core team members review and request changes
+3. Thorough review process (days/weeks)
+4. Core team merges after approval
+5. Regular cleanup of stale CRs
+
+## Best Practices
+
+<Steps>
+  <Step title="Assign Clear Roles">
+    Ensure each team member has appropriate role:
+    - Too many Managers can lead to conflicts
+    - Too few Approvers creates bottlenecks
+    - Most contributors should be Wiki Users
+  </Step>
+  
+  <Step title="Establish Review SLAs">
+    Set expectations for review turnaround:
+    - Critical updates: < 2 hours
+    - Standard updates: < 1 day
+    - Non-urgent: < 3 days
+  </Step>
+  
+  <Step title="Communicate Out-of-Band">
+    Use chat/email for coordination:
+    - Notify reviewers when CR is ready
+    - Discuss complex conflicts in real-time
+    - Reference discussions in CR comments
+  </Step>
+  
+  <Step title="Keep CRs Focused">
+    Small, focused CRs are easier to collaborate on:
+    - Faster to review
+    - Less likely to conflict
+    - Easier to understand changes
+  </Step>
+  
+  <Step title="Use Descriptive Messages">
+    Help reviewers understand intent:
+    - Clear CR titles
+    - Detailed descriptions
+    - Explain non-obvious changes
+  </Step>
+</Steps>
+
+## Feedback Collection
+
+Wiki Spaces can enable feedback collection from readers:
+
+### Configuration
+
+**enable_feedback_collection** (Wiki Space)  
+Enables feedback widget on all pages in the space
+
+**enable_feedback** (Wiki Settings)  
+Global toggle for feedback feature
+
+**feedback_submission_limit** (Wiki Settings)  
+Hourly rate limit per user (default: 3)
+
+**ask_for_contact_details** (Wiki Settings)  
+Requests email address with feedback
+
+### Feedback Types
+
+**Good / Ok / Bad**  
+Quick sentiment rating for the page
+
+**Text Feedback**  
+Optional detailed comments
+
+**Email Contact**  
+Optional email for follow-up (validated)
+
+### Feedback Workflow
+
+<Steps>
+  <Step title="Reader Submits Feedback">
+    Via feedback widget on published page:
+    - Choose sentiment (Good/Ok/Bad)
+    - Optional: Provide text feedback
+    - Optional: Provide email address
+  </Step>
+  
+  <Step title="Rate Limit Check">
+    System enforces hourly submission limit (default: 3 per hour)
+  </Step>
+  
+  <Step title="Create Wiki Feedback">
+    System stores feedback record:
+    - Linked to Wiki Document
+    - Timestamp and user tracking
+    - Status: Open
+  </Step>
+  
+  <Step title="Team Reviews Feedback">
+    Content team monitors feedback:
+    - Identifies common issues
+    - Creates CRs to address problems
+    - Marks feedback as Closed when addressed
+  </Step>
+</Steps>
+
+<Note>
+Feedback is stored in the **Wiki Feedback** doctype and can be viewed by Wiki Managers to understand content quality and user needs.
+</Note>
+
+## Audit Trail
+
+Frappe Wiki maintains comprehensive audit trails for accountability:
+
+### Document-Level Tracking
+
+**Wiki Change Request**
+- `track_changes: 1`: Full field-level change tracking
+- `owner`: CR creator
+- `modified_by`: Last modifier
+- `creation`: Creation timestamp
+- `modified`: Last update timestamp
+
+### Revision History
+
+**Wiki Revision**
+- `parent_revision`: Links to previous revision
+- `created_by`: Revision creator
+- `created_at`: Creation timestamp
+- Forms complete revision graph
+
+### Merge Tracking
+
+**Wiki Change Request**
+- `merged_by`: User who performed merge
+- `merged_at`: Merge timestamp
+- `merge_revision`: Result of merge
+
+### Conflict Resolution Tracking
+
+**Wiki Merge Conflict**
+- `resolved_by`: User who resolved conflict
+- `resolved_at`: Resolution timestamp
+- `resolution`: Method chosen (ours/theirs/manual)
+
+<Note>
+Frappe's built-in document versioning (via `track_changes`) provides additional audit capabilities. Every field change is recorded with user and timestamp.
+</Note>
+
+## Related Features
+
+- [Change Requests](/features/change-requests) - Core collaboration workflow
+- [Wiki Spaces](/features/wiki-spaces) - Permission and feedback settings
+- [Wiki Documents](/features/wiki-documents) - Content being collaborated on

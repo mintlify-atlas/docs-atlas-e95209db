@@ -1,0 +1,293 @@
+---
+title: WikiSpace
+description: API reference for the WikiSpace class
+---
+
+The `WikiSpace` class represents a wiki space - a collection of documents organized under a single navigation structure.
+
+## Class Definition
+
+```python
+from frappe.model.document import Document
+
+class WikiSpace(Document):
+    pass
+```
+
+**Location:** `wiki/wiki/doctype/wiki_space/wiki_space.py`
+
+## DocType Fields
+
+<ParamField path="space_name" type="Data">
+  Display name of the wiki space
+</ParamField>
+
+<ParamField path="route" type="Data" required>
+  Base URL route for this space (unique)
+</ParamField>
+
+<ParamField path="root_group" type="Link">
+  Link to the root Wiki Document that serves as the space's container
+</ParamField>
+
+<ParamField path="main_revision" type="Link">
+  Link to the current main Wiki Revision (read-only)
+</ParamField>
+
+<ParamField path="is_published" type="Check" default="1">
+  Whether the space is published and visible
+</ParamField>
+
+<ParamField path="show_in_switcher" type="Check" default="1">
+  Whether to show this space in the app switcher
+</ParamField>
+
+<ParamField path="switcher_order" type="Int" default="0">
+  Display order in the app switcher
+</ParamField>
+
+<ParamField path="enable_feedback_collection" type="Check" default="1">
+  Whether to enable feedback collection for this space
+</ParamField>
+
+<ParamField path="light_mode_logo" type="Attach Image">
+  Logo to display in light mode
+</ParamField>
+
+<ParamField path="dark_mode_logo" type="Attach Image">
+  Logo to display in dark mode
+</ParamField>
+
+<ParamField path="app_switcher_logo" type="Attach Image">
+  Logo to display in the app switcher
+</ParamField>
+
+<ParamField path="favicon" type="Attach Image">
+  Favicon for the wiki space
+</ParamField>
+
+<ParamField path="navbar_items" type="Table">
+  Top Bar Items for navigation
+</ParamField>
+
+<ParamField path="wiki_sidebars" type="Table">
+  Legacy sidebar items (pre-v3)
+</ParamField>
+
+## Lifecycle Methods
+
+### before_insert()
+
+Called before inserting a new Wiki Space. Creates the root group document.
+
+```python
+def before_insert(self):
+    self.create_root_group()
+```
+
+**Source:** `wiki_space.py:49`
+
+### validate()
+
+Validates the document before saving.
+
+```python
+def validate(self):
+    self.remove_leading_slash_from_route()
+```
+
+**Source:** `wiki_space.py:52`
+
+## Instance Methods
+
+### create_root_group()
+
+Creates the root Wiki Document group for this space.
+
+```python
+def create_root_group(self)
+```
+
+**Example:**
+```python
+space = frappe.new_doc("Wiki Space")
+space.space_name = "Documentation"
+space.route = "docs"
+space.create_root_group()  # Automatically called in before_insert
+space.insert()
+```
+
+**Source:** `wiki_space.py:59`
+
+### migrate_to_v3()
+
+Migrates a legacy wiki space (v2) to the v3 structure.
+
+```python
+@frappe.whitelist()
+def migrate_to_v3(self)
+```
+
+**Example:**
+```python
+space = frappe.get_doc("Wiki Space", "SPACE-001")
+space.migrate_to_v3()
+```
+
+**Source:** `wiki_space.py:74`
+
+### update_routes(new_route)
+
+Updates the Wiki Space route and all child Wiki Documents.
+
+```python
+@frappe.whitelist()
+def update_routes(self, new_route: str) -> dict
+```
+
+<ParamField path="new_route" type="str" required>
+  The new route for the wiki space
+</ParamField>
+
+**Returns:** `dict` - Dictionary with `updated_count` key
+
+**Raises:** 
+- `frappe.PermissionError` - If user is not Wiki Manager
+- `frappe.ValidationError` - If route is invalid or already exists
+
+**Example:**
+```python
+space = frappe.get_doc("Wiki Space", "SPACE-001")
+result = space.update_routes("new-docs")
+print(f"Updated {result['updated_count']} documents")
+```
+
+**Source:** `wiki_space.py:141`
+
+### clone_wiki_space_in_background(new_space_route)
+
+Queues a background job to clone this Wiki Space.
+
+```python
+@frappe.whitelist()
+def clone_wiki_space_in_background(self, new_space_route: str) -> dict
+```
+
+<ParamField path="new_space_route" type="str" required>
+  Route for the new cloned space
+</ParamField>
+
+**Returns:** `dict` - Dictionary with `status` and `new_route` keys
+
+**Raises:** `frappe.PermissionError` - If user is not Wiki Manager
+
+**Example:**
+```python
+space = frappe.get_doc("Wiki Space", "SPACE-001")
+result = space.clone_wiki_space_in_background("docs-v2")
+if result['status'] == 'queued':
+    print("Clone job queued successfully")
+```
+
+**Source:** `wiki_space.py:214`
+
+## Module Functions
+
+### clone_wiki_space(wiki_space, new_space_route, user)
+
+Clones a Wiki Space with all its documents.
+
+```python
+def clone_wiki_space(wiki_space: str, new_space_route: str, user: str | None = None) -> str
+```
+
+<ParamField path="wiki_space" type="str" required>
+  Name of the Wiki Space to clone
+</ParamField>
+
+<ParamField path="new_space_route" type="str" required>
+  Route for the new cloned space
+</ParamField>
+
+<ParamField path="user" type="str">
+  User to run the operation as (for background jobs)
+</ParamField>
+
+**Returns:** `str` - Name of the newly created Wiki Space
+
+**Example:**
+```python
+from wiki.wiki.doctype.wiki_space.wiki_space import clone_wiki_space
+
+new_space_name = clone_wiki_space(
+    wiki_space="SPACE-001",
+    new_space_route="docs-v2"
+)
+print(f"Created new space: {new_space_name}")
+```
+
+**Source:** `wiki_space.py:244`
+
+## Usage Examples
+
+### Creating a New Wiki Space
+
+```python
+import frappe
+
+# Create a new wiki space
+space = frappe.new_doc("Wiki Space")
+space.space_name = "Product Documentation"
+space.route = "product-docs"
+space.is_published = 1
+space.enable_feedback_collection = 1
+space.insert()
+
+# The root group is automatically created
+print(f"Root group: {space.root_group}")
+```
+
+### Adding Documents to a Space
+
+```python
+import frappe
+
+space = frappe.get_doc("Wiki Space", "SPACE-001")
+
+# Create a new document under the space
+doc = frappe.new_doc("Wiki Document")
+doc.title = "Getting Started"
+doc.parent_wiki_document = space.root_group
+doc.content = "# Welcome\n\nStart here..."
+doc.is_published = 1
+doc.insert()
+```
+
+### Updating Space Routes
+
+```python
+import frappe
+
+space = frappe.get_doc("Wiki Space", "SPACE-001")
+
+# Update the route (updates all child documents)
+result = space.update_routes("new-documentation")
+print(f"Updated {result['updated_count']} documents")
+
+# All document routes are automatically updated
+```
+
+### Cloning a Wiki Space
+
+```python
+import frappe
+
+space = frappe.get_doc("Wiki Space", "SPACE-001")
+
+# Clone the space asynchronously
+result = space.clone_wiki_space_in_background("docs-v2")
+
+if result['status'] == 'queued':
+    print(f"Cloning to route: {result['new_route']}")
+    print("Clone will complete in the background")
+```

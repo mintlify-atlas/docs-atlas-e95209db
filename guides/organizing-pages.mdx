@@ -1,0 +1,378 @@
+---
+title: Organizing Pages
+description: Structure your documentation with groups, hierarchies, and page ordering
+---
+
+Well-organized documentation helps users find information quickly and understand the relationships between topics. Frappe Wiki provides powerful tools for creating hierarchical page structures through groups, drag-and-drop reordering, and nested organization.
+
+## Understanding Page Hierarchies
+
+Frappe Wiki uses a tree structure to organize content:
+
+- **Wiki Space**: The root container for all your documentation
+- **Root Group**: The top-level folder created automatically with each space
+- **Groups**: Folders that contain pages and other groups
+- **Pages**: The actual content pages within groups
+- **External Links**: Links to external resources that appear in your navigation
+
+### Nested Structure
+
+You can nest groups and pages to any depth:
+
+```
+Wiki Space (e.g., Product Docs)
+└── Root Group
+    ├── Getting Started (Group)
+    │   ├── Installation (Page)
+    │   ├── Quick Start (Page)
+    │   └── Configuration (Page)
+    ├── User Guide (Group)
+    │   ├── Basic Features (Group)
+    │   │   ├── Creating Projects (Page)
+    │   │   └── Managing Tasks (Page)
+    │   └── Advanced Features (Group)
+    │       └── Automation (Page)
+    └── API Reference (Page)
+```
+
+## Creating Groups
+
+Groups are containers that organize related pages:
+
+<Steps>
+  <Step title="Access the Parent">
+    In the sidebar, find the group where you want to create a new subgroup.
+  </Step>
+  <Step title="Create Group">
+    Hover over the parent group and click the three-dot menu. Select **Add Group**.
+  </Step>
+  <Step title="Name the Group">
+    Enter a descriptive name that represents the content category (e.g., "User Guide", "Tutorials", "API Reference").
+  </Step>
+  <Step title="Add Pages">
+    Once created, you can add pages to the group or create nested groups within it.
+  </Step>
+</Steps>
+
+<Note>
+Groups don't contain content themselves—they only organize and contain pages and other groups. Clicking a published group redirects to its first published page.
+</Note>
+
+## Adding Pages to Groups
+
+Create pages directly within a group:
+
+### For Empty Groups
+
+When a group is empty, you'll see quick action buttons:
+
+1. Click **Add Page** to create a page
+2. Click **Add Group** to create a nested group
+3. These buttons appear below the empty group in the sidebar
+
+### For Existing Groups
+
+<Steps>
+  <Step title="Open Context Menu">
+    Hover over the group in the sidebar and click the three-dot menu.
+  </Step>
+  <Step title="Select Add Page">
+    Click **Add Page** from the dropdown menu.
+  </Step>
+  <Step title="Configure Page">
+    Enter the page title and configure its settings in the dialog.
+  </Step>
+</Steps>
+
+## Reordering Pages and Groups
+
+Rearrange your documentation structure using drag-and-drop:
+
+<Steps>
+  <Step title="Hover to Show Handle">
+    Hover over any page or group in the sidebar. A grip icon (⋮⋮) appears on the left.
+  </Step>
+  <Step title="Drag to Reorder">
+    Click and hold the grip icon, then drag the item to its new position:
+    - Drag between siblings to change order
+    - Drag onto a group to move it inside
+    - Drag to the root level to remove from a group
+  </Step>
+  <Step title="Drop to Place">
+    Release the mouse button to place the item in its new location.
+  </Step>
+  <Step title="Save Changes">
+    The reordering is saved automatically to your draft change request.
+  </Step>
+</Steps>
+
+<Info>
+All reorganization happens in your draft change request. Changes appear live in the sidebar preview but won't affect the published wiki until you merge your changes.
+</Info>
+
+## Moving Pages Between Groups
+
+Move pages to different groups:
+
+### Using Drag and Drop
+
+1. Find the page you want to move in the sidebar
+2. Click and drag the grip handle
+3. Hover over the target group until it highlights
+4. Drop the page into the group
+
+### Using Cut and Paste
+
+For moving pages across large distances:
+
+1. Right-click the page
+2. Future feature: Cut/paste functionality (coming soon)
+
+<Warning>
+When you move a page, its URL route changes to reflect its new location in the hierarchy. Any external links to the old URL will need to be updated.
+</Warning>
+
+## Managing External Links
+
+Add links to external resources in your sidebar navigation:
+
+<Steps>
+  <Step title="Open Group Menu">
+    Right-click on a group where you want to add the external link.
+  </Step>
+  <Step title="Select Add External Link">
+    Click **Add External Link** from the menu.
+  </Step>
+  <Step title="Configure Link">
+    Enter:
+    - **Title**: The text to display in the sidebar
+    - **URL**: The full external URL (e.g., `https://example.com`)
+  </Step>
+  <Step title="Save">
+    Click **Save** to add the link to your draft.
+  </Step>
+</Steps>
+
+External links appear in the sidebar with a link icon (🔗) to indicate they lead outside your wiki.
+
+### Editing External Links
+
+To modify an external link:
+
+1. Click on the external link in the sidebar
+2. An edit dialog opens automatically
+3. Update the title or URL
+4. Save your changes
+
+## Renaming Pages and Groups
+
+Change the title of any page or group:
+
+<Steps>
+  <Step title="Open Context Menu">
+    Right-click the page or group in the sidebar.
+  </Step>
+  <Step title="Select Rename">
+    Click **Rename** or **Change Title** from the menu.
+  </Step>
+  <Step title="Enter New Name">
+    Type the new title in the dialog.
+  </Step>
+  <Step title="Update Route">
+    For pages, you can also update the URL route if needed.
+  </Step>
+  <Step title="Save">
+    Click **Save** to apply the changes to your draft.
+  </Step>
+</Steps>
+
+<Note>
+Renaming a page may change its URL if the route is auto-generated from the title. Consider manually setting the route to maintain URL stability.
+</Note>
+
+## Deleting Pages and Groups
+
+Remove pages and groups from your wiki:
+
+### Deleting Individual Pages
+
+<Steps>
+  <Step title="Open Context Menu">
+    Right-click the page you want to delete.
+  </Step>
+  <Step title="Select Delete">
+    Click **Delete** from the menu.
+  </Step>
+  <Step title="Confirm">
+    Confirm the deletion in the dialog.
+  </Step>
+</Steps>
+
+### Deleting Groups
+
+<Warning>
+You can only delete empty groups. Remove or move all pages and subgroups first.
+</Warning>
+
+<Steps>
+  <Step title="Empty the Group">
+    Delete or move all pages and subgroups out of the group.
+  </Step>
+  <Step title="Delete Group">
+    Right-click the empty group and select **Delete**.
+  </Step>
+</Steps>
+
+## Expanding and Collapsing Groups
+
+Control the sidebar view:
+
+- **Expand**: Click the chevron (▶) or the group name to show its contents
+- **Collapse**: Click the chevron again (▼) to hide contents
+- **Persistence**: The expanded/collapsed state is saved per-space and persists across sessions
+
+## Understanding Page Routes
+
+Each page has a route (URL path) that reflects its position in the hierarchy:
+
+### How Routes Are Generated
+
+```
+Route structure:
+/[space-route]/[group-slug]/[subgroup-slug]/[page-slug]
+
+Example:
+Space: "Product Docs" (route: "docs")
+Group: "User Guide" (slug: "user-guide")
+Page: "Getting Started" (slug: "getting-started")
+
+Result: /docs/user-guide/getting-started
+```
+
+### Customizing Routes
+
+Edit routes to create clean URLs:
+
+<Steps>
+  <Step title="Open Page Settings">
+    Click the route displayed below the page title in the editor header.
+  </Step>
+  <Step title="Edit Route">
+    Modify the route path in the dialog. Use hyphens for word separation.
+  </Step>
+  <Step title="Save">
+    Click **Save** to update the route in your draft.
+  </Step>
+</Steps>
+
+<Info>
+Custom routes override the auto-generated path. This is useful for maintaining stable URLs when reorganizing content.
+</Info>
+
+## Publishing Status and Visibility
+
+Control which pages appear in the published wiki:
+
+### Published vs. Unpublished
+
+- **Published Pages**: Visible to all users in the live wiki
+- **Unpublished Pages**: Only visible to editors with access to drafts
+- **Groups**: Automatically visible if they contain any published pages
+
+### Toggling Publish Status
+
+<Steps>
+  <Step title="Open Page Menu">
+    Right-click a page in the sidebar.
+  </Step>
+  <Step title="Toggle Status">
+    Click **Publish** or **Unpublish** to change the page's status.
+  </Step>
+</Steps>
+
+Published pages show with normal text, while unpublished pages appear dimmed with a "Not Published" badge.
+
+## Visual Indicators in the Sidebar
+
+Understand the sidebar icons and badges:
+
+| Icon | Meaning |
+|------|---------|  |
+| 📁 (Folder) | Group/folder |
+| 📄 (File) | Page |
+| 🔗 (Link) | External link |
+| Blue "New" badge | Newly added in draft |
+| Red "Deleted" badge | Marked for deletion in draft |
+| Blue "Modified" badge | Changed content in draft |
+| Orange "Reordered" badge | Position changed in draft |
+| Orange "Not Published" | Page exists but not published |
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Plan Your Structure">
+    Before creating pages, sketch out your documentation structure. Group related content together and think about the user's learning journey.
+  </Accordion>
+  <Accordion title="Use Consistent Naming">
+    Establish naming conventions for groups (e.g., "Guide", "Reference", "Tutorial") and stick to them.
+  </Accordion>
+  <Accordion title="Limit Nesting Depth">
+    While you can nest infinitely, try to limit hierarchy to 3-4 levels for better navigation and discoverability.
+  </Accordion>
+  <Accordion title="Start with Published">
+    Set pages to published by default unless they're truly incomplete. Users expect to see all documentation.
+  </Accordion>
+  <Accordion title="Maintain Clean URLs">
+    Use custom routes for important pages to ensure URLs remain stable even if you reorganize the structure later.
+  </Accordion>
+  <Accordion title="Order by User Journey">
+    Arrange pages in the order users should read them, typically starting with basics and progressing to advanced topics.
+  </Accordion>
+</AccordionGroup>
+
+## Common Organization Patterns
+
+### Getting Started First
+
+```
+├── Getting Started
+│   ├── Installation
+│   ├── Quick Start
+│   └── Basic Concepts
+├── User Guide
+├── Advanced Topics
+└── Reference
+```
+
+### Feature-Based Organization
+
+```
+├── Overview
+├── Feature A
+│   ├── Introduction
+│   ├── Configuration
+│   └── Examples
+├── Feature B
+│   └── ...
+└── FAQ
+```
+
+### Role-Based Organization
+
+```
+├── For End Users
+├── For Administrators  
+├── For Developers
+└── API Reference
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Review Workflow" icon="git-pull-request" href="/guides/review-workflow">
+    Learn how to submit and review structural changes
+  </Card>
+  <Card title="Publishing" icon="rocket" href="/guides/publishing">
+    Understand how to publish your organized documentation
+  </Card>
+</CardGroup>

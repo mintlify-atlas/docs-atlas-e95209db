@@ -1,0 +1,441 @@
+---
+title: Wiki Spaces API
+description: Access wiki space tree structure and navigation
+---
+
+## Overview
+
+The Wiki Spaces API provides access to the hierarchical structure of wiki documents, navigation, and reordering capabilities.
+
+## Get Wiki Tree
+
+Retrieve the complete tree structure of documents for a wiki space.
+
+```
+POST /api/method/wiki.api.wiki_space.get_wiki_tree
+```
+
+### Parameters
+
+<ParamField path="space_id" type="string" required>
+  Unique identifier of the wiki space
+</ParamField>
+
+### Response
+
+<ResponseField name="message" type="object">
+  <Expandable title="Tree Response">
+    <ResponseField name="children" type="array">
+      Nested array of document nodes
+      
+      <Expandable title="Document Node">
+        <ResponseField name="name" type="string">
+          Document identifier
+        </ResponseField>
+        
+        <ResponseField name="title" type="string">
+          Document title
+        </ResponseField>
+        
+        <ResponseField name="label" type="string">
+          Display label (same as title)
+        </ResponseField>
+        
+        <ResponseField name="is_group" type="boolean">
+          Whether this is a group/folder
+        </ResponseField>
+        
+        <ResponseField name="is_published" type="boolean">
+          Publication status
+        </ResponseField>
+        
+        <ResponseField name="route" type="string">
+          URL route for the document
+        </ResponseField>
+        
+        <ResponseField name="parent_wiki_document" type="string">
+          Parent document identifier
+        </ResponseField>
+        
+        <ResponseField name="sort_order" type="integer">
+          Sort position among siblings
+        </ResponseField>
+        
+        <ResponseField name="children" type="array">
+          Nested child documents
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="root_group" type="string">
+      Identifier of the root document
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.wiki_space.get_wiki_tree \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{"space_id": "WS-001"}'
+```
+
+**Response:**
+
+```json
+{
+  "message": {
+    "children": [
+      {
+        "name": "WD-001",
+        "title": "Getting Started",
+        "label": "Getting Started",
+        "is_group": true,
+        "is_published": true,
+        "route": "docs/getting-started",
+        "parent_wiki_document": "ROOT-001",
+        "sort_order": 0,
+        "children": [
+          {
+            "name": "WD-002",
+            "title": "Installation",
+            "label": "Installation",
+            "is_group": false,
+            "is_published": true,
+            "route": "docs/getting-started/installation",
+            "parent_wiki_document": "WD-001",
+            "sort_order": 0,
+            "children": []
+          }
+        ]
+      }
+    ],
+    "root_group": "ROOT-001"
+  }
+}
+```
+
+## Reorder Wiki Documents
+
+Reorder a wiki document by changing its parent and/or position among siblings.
+
+```
+POST /api/method/wiki.api.wiki_space.reorder_wiki_documents
+```
+
+### Parameters
+
+<ParamField path="doc_name" type="string" required>
+  Name of the document being moved
+</ParamField>
+
+<ParamField path="new_parent" type="string">
+  New parent document name (can be null for root level)
+</ParamField>
+
+<ParamField path="new_index" type="integer" required>
+  New index position among siblings (0-based)
+</ParamField>
+
+<ParamField path="siblings" type="string" required>
+  JSON string of sibling document names in the new order
+</ParamField>
+
+### Response
+
+<ResponseField name="is_contribution" type="boolean">
+  Always `false` for direct reorders (user has write permission)
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.wiki_space.reorder_wiki_documents \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "doc_name": "WD-002",
+    "new_parent": "WD-001",
+    "new_index": 2,
+    "siblings": "[\"WD-003\", \"WD-004\", \"WD-002\"]"
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "message": {
+    "is_contribution": false
+  }
+}
+```
+
+### Permissions
+
+This endpoint requires write permission on the Wiki Document. Users without write permission will receive a permission error.
+
+### Behavior
+
+- When `new_parent` differs from current parent, the document is moved to a new parent
+- The `siblings` array determines the sort order of all siblings
+- Tree structure (lft/rgt) is automatically rebuilt when parent changes
+- Sort order is sufficient for simple reorders within the same parent
+- The main revision is automatically synced after the reorder
+
+## Update Wiki Space Routes
+
+Update the route of a wiki space and all documents under it. Requires Wiki Manager role.
+
+```
+POST /api/method/wiki.wiki.doctype.wiki_space.wiki_space.update_routes
+```
+
+<Note>
+  This is a DocType method. The space name is included in the method path.
+</Note>
+
+### Parameters
+
+<ParamField path="new_route" type="string" required>
+  New base route for the wiki space
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST "https://your-site.com/api/method/wiki.wiki.doctype.wiki_space.wiki_space.update_routes" \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "new_route": "documentation"
+  }'
+```
+
+### Response
+
+<ResponseField name="updated_count" type="integer">
+  Number of documents updated
+</ResponseField>
+
+<ResponseField name="old_route" type="string">
+  Previous route
+</ResponseField>
+
+<ResponseField name="new_route" type="string">
+  New route
+</ResponseField>
+
+## Get User Info
+
+Get information about the currently authenticated user.
+
+```
+POST /api/method/wiki.api.get_user_info
+```
+
+### Response
+
+<ResponseField name="message" type="object">
+  <Expandable title="User Information">
+    <ResponseField name="name" type="string">
+      User email/identifier
+    </ResponseField>
+    
+    <ResponseField name="is_logged_in" type="boolean">
+      Authentication status
+    </ResponseField>
+    
+    <ResponseField name="first_name" type="string">
+      First name
+    </ResponseField>
+    
+    <ResponseField name="last_name" type="string">
+      Last name
+    </ResponseField>
+    
+    <ResponseField name="full_name" type="string">
+      Full name
+    </ResponseField>
+    
+    <ResponseField name="email" type="string">
+      Email address
+    </ResponseField>
+    
+    <ResponseField name="user_image" type="string">
+      Profile image URL
+    </ResponseField>
+    
+    <ResponseField name="roles" type="array">
+      Array of role objects
+    </ResponseField>
+    
+    <ResponseField name="brand_image" type="string">
+      Site brand image URL
+    </ResponseField>
+    
+    <ResponseField name="language" type="string">
+      User's language preference
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.get_user_info \
+  -H "Authorization: token api_key:api_secret"
+```
+
+**Response:**
+
+```json
+{
+  "message": {
+    "name": "admin@example.com",
+    "is_logged_in": true,
+    "first_name": "Admin",
+    "last_name": "User",
+    "full_name": "Admin User",
+    "email": "admin@example.com",
+    "user_image": "/files/avatar.jpg",
+    "roles": [
+      {"role": "Wiki Manager"},
+      {"role": "System Manager"}
+    ],
+    "brand_image": "/files/logo.png",
+    "language": "en"
+  }
+}
+```
+
+### Guest Response
+
+For unauthenticated requests:
+
+```json
+{
+  "message": {
+    "is_logged_in": false
+  }
+}
+```
+
+## Get Translations
+
+Get UI translations for the current language. Allows guest access.
+
+```
+POST /api/method/wiki.api.get_translations
+```
+
+### Response
+
+Returns an object mapping translation keys to translated strings.
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.get_translations
+```
+
+## Tree Structure Notes
+
+### Nested Set Model
+
+Wiki documents use a nested set model (lft/rgt fields) for efficient tree queries:
+
+- `lft` (left): Left boundary of the node
+- `rgt` (right): Right boundary of the node
+- Descendants have lft > parent.lft and rgt < parent.rgt
+
+### Sort Order
+
+Documents within the same parent are ordered by:
+
+1. `sort_order` field (primary)
+2. `name` field (secondary, for stability)
+
+### Tree Operations
+
+<AccordionGroup>
+  <Accordion title="Moving Documents">
+    When a document is moved to a new parent:
+    
+    1. The `parent_wiki_document` field is updated
+    2. The `sort_order` of all siblings is recalculated
+    3. The entire tree is rebuilt (lft/rgt values)
+    4. The wiki space's main revision is synced
+  </Accordion>
+  
+  <Accordion title="Reordering Siblings">
+    When siblings are reordered without changing parents:
+    
+    1. Only `sort_order` fields are updated
+    2. Tree rebuild is skipped (optimization)
+    3. Main revision is still synced
+  </Accordion>
+  
+  <Accordion title="Batch Updates">
+    The reorder API uses batch SQL updates for efficiency:
+    
+    ```sql
+    UPDATE `tabWiki Document`
+    SET sort_order = CASE name 
+      WHEN 'doc1' THEN 0
+      WHEN 'doc2' THEN 1
+      WHEN 'doc3' THEN 2
+    END
+    WHERE name IN ('doc1', 'doc2', 'doc3')
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Caching Tree Data">
+    - The tree structure changes infrequently
+    - Cache the tree response on the client
+    - Invalidate cache after reorder operations
+    - Use ETags if your site supports them
+  </Accordion>
+  
+  <Accordion title="Handling Large Trees">
+    - The API returns the complete tree
+    - For very large wikis (>1000 pages), consider:
+      - Client-side virtualization
+      - Lazy loading of subtrees
+      - Filtering by is_published for public users
+  </Accordion>
+  
+  <Accordion title="Concurrent Edits">
+    - Reorder operations lock the document tree
+    - Avoid concurrent reorders from multiple users
+    - Implement optimistic locking on the client
+    - Handle 409 Conflict errors gracefully
+  </Accordion>
+</AccordionGroup>
+
+## Error Handling
+
+<Warning>
+  **Permission Errors**
+  
+  Reorder operations require write permission. Users without permission will receive:
+  
+  ```json
+  {
+    "exc_type": "PermissionError",
+    "exception": "You do not have permission to reorder this document"
+  }
+  ```
+</Warning>
+
+### Common Errors
+
+- **404 Not Found**: Wiki space or document doesn't exist
+- **403 Forbidden**: Insufficient permissions
+- **417 Validation Error**: Invalid parameters or state

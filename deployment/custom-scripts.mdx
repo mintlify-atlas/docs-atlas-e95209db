@@ -1,0 +1,345 @@
+---
+title: Custom Script Support
+description: Extend Frappe Wiki functionality with custom JavaScript code
+---
+
+Frappe Wiki supports custom JavaScript code execution through Wiki Settings, allowing you to extend functionality, add analytics, and customize behavior without modifying the core codebase.
+
+## Overview
+
+Custom scripts are added through the **Javascript** field in [Wiki Settings](/deployment/settings#custom-javascript). Code entered here executes on all wiki pages, giving you full control over client-side behavior.
+
+## Use Cases
+
+### Analytics and Tracking
+
+Integrate third-party analytics tools to track page views, user behavior, and engagement metrics.
+
+```javascript
+// Google Analytics
+(function() {
+  var script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID';
+  document.head.appendChild(script);
+  
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'GA_MEASUREMENT_ID');
+})();
+```
+
+```javascript
+// Mixpanel tracking
+(function() {
+  var script = document.createElement('script');
+  script.src = 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js';
+  document.head.appendChild(script);
+  
+  script.onload = function() {
+    mixpanel.init('YOUR_TOKEN');
+    mixpanel.track('Page View', {
+      'page': window.location.pathname,
+      'title': document.title
+    });
+  };
+})();
+```
+
+### Custom Styling
+
+Dynamically inject CSS or modify page elements.
+
+```javascript
+// Add custom CSS
+var style = document.createElement('style');
+style.textContent = `
+  .wiki-content h1 {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+  }
+  
+  .wiki-content code {
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+`;
+document.head.appendChild(style);
+```
+
+### Interactive Features
+
+Add custom interactions and behaviors to wiki pages.
+
+```javascript
+// Add copy buttons to code blocks
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('pre code').forEach(function(codeBlock) {
+    var button = document.createElement('button');
+    button.className = 'copy-code-button';
+    button.textContent = 'Copy';
+    
+    button.addEventListener('click', function() {
+      navigator.clipboard.writeText(codeBlock.textContent);
+      button.textContent = 'Copied!';
+      setTimeout(function() {
+        button.textContent = 'Copy';
+      }, 2000);
+    });
+    
+    codeBlock.parentNode.insertBefore(button, codeBlock);
+  });
+});
+```
+
+### External Link Indicators
+
+Automatically mark external links with an icon.
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('a[href^="http"]').forEach(function(link) {
+    // Don't modify links on same domain
+    if (link.hostname === window.location.hostname) {
+      return;
+    }
+    
+    // Add external link icon
+    var icon = document.createElement('span');
+    icon.innerHTML = ' ↗';
+    icon.style.fontSize = '0.8em';
+    link.appendChild(icon);
+    
+    // Open in new tab
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+  });
+});
+```
+
+### Custom Navigation
+
+Implement custom navigation behaviors or breadcrumbs.
+
+```javascript
+// Track reading progress
+document.addEventListener('DOMContentLoaded', function() {
+  var progressBar = document.createElement('div');
+  progressBar.style.cssText = '
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: #3498db;
+    z-index: 9999;
+    transition: width 0.2s;
+  ';
+  document.body.appendChild(progressBar);
+  
+  window.addEventListener('scroll', function() {
+    var winScroll = document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var scrolled = (winScroll / height) * 100;
+    progressBar.style.width = scrolled + '%';
+  });
+});
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use IIFE to avoid global scope pollution">
+    Wrap your code in an Immediately Invoked Function Expression (IIFE) to prevent variable conflicts:
+    
+    ```javascript
+    (function() {
+      // Your code here
+      var myVariable = 'safe';
+    })();
+    ```
+  </Accordion>
+  
+  <Accordion title="Wait for DOM ready">
+    Use `DOMContentLoaded` event to ensure the page has loaded before manipulating elements:
+    
+    ```javascript
+    document.addEventListener('DOMContentLoaded', function() {
+      // Safe to manipulate DOM here
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Handle errors gracefully">
+    Add error handling to prevent script failures from breaking the page:
+    
+    ```javascript
+    try {
+      // Your code here
+    } catch (error) {
+      console.error('Custom script error:', error);
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Minimize performance impact">
+    - Use event delegation for dynamic elements
+    - Debounce scroll/resize handlers
+    - Load external scripts asynchronously
+    - Avoid blocking the main thread
+    
+    ```javascript
+    // Debounce example
+    function debounce(func, wait) {
+      var timeout;
+      return function() {
+        var context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(function() {
+          func.apply(context, args);
+        }, wait);
+      };
+    }
+    
+    window.addEventListener('resize', debounce(function() {
+      // Handle resize
+    }, 250));
+    ```
+  </Accordion>
+  
+  <Accordion title="Test thoroughly">
+    - Test in different browsers
+    - Check mobile responsiveness
+    - Verify with browser extensions disabled
+    - Test with slow network connections
+    - Check browser console for errors
+  </Accordion>
+</AccordionGroup>
+
+## Security Considerations
+
+<Warning>
+  Custom JavaScript executes in the user's browser with full access to the page. Follow these security guidelines:
+</Warning>
+
+### Avoid Sensitive Data
+
+Never include API keys, passwords, or sensitive credentials in custom scripts.
+
+```javascript
+// ❌ BAD: Hardcoded credentials
+var apiKey = 'sk_live_abc123';
+
+// ✅ GOOD: Use server-side API calls
+fetch('/api/method/your_app.api.get_data')
+  .then(r => r.json())
+  .then(data => console.log(data));
+```
+
+### Sanitize User Input
+
+If your script processes user input, sanitize it to prevent XSS attacks.
+
+```javascript
+// ❌ BAD: Direct HTML injection
+element.innerHTML = userInput;
+
+// ✅ GOOD: Use textContent or sanitize
+element.textContent = userInput;
+// OR use a sanitization library
+```
+
+### Validate External Resources
+
+When loading external scripts, use Subresource Integrity (SRI) when possible.
+
+```javascript
+var script = document.createElement('script');
+script.src = 'https://cdn.example.com/library.js';
+script.integrity = 'sha384-abc123...';
+script.crossOrigin = 'anonymous';
+document.head.appendChild(script);
+```
+
+## Debugging
+
+### Browser Console
+
+Use `console.log()` for debugging:
+
+```javascript
+console.log('Script loaded');
+console.log('Current page:', window.location.pathname);
+```
+
+### Error Handling
+
+Implement comprehensive error logging:
+
+```javascript
+window.addEventListener('error', function(event) {
+  console.error('Script error:', event.error);
+});
+
+try {
+  // Your code
+} catch (error) {
+  console.error('Caught error:', error.message);
+  console.error('Stack trace:', error.stack);
+}
+```
+
+## Common Issues
+
+<Accordion title="Script not executing">
+  **Causes:**
+  - JavaScript syntax errors
+  - Wiki Settings not saved
+  - Browser cache
+  
+  **Solutions:**
+  1. Check browser console for errors
+  2. Verify script is saved in Wiki Settings
+  3. Hard refresh (Ctrl+Shift+R or Cmd+Shift+R)
+  4. Test with simple `console.log('test')` first
+</Accordion>
+
+<Accordion title="Elements not found">
+  **Cause:** Script running before DOM is ready
+  
+  **Solution:** Wrap code in `DOMContentLoaded` event:
+  
+  ```javascript
+  document.addEventListener('DOMContentLoaded', function() {
+    // Your code here
+  });
+  ```
+</Accordion>
+
+<Accordion title="Script conflicts with other scripts">
+  **Causes:**
+  - Global variable conflicts
+  - Event listener conflicts
+  
+  **Solutions:**
+  - Use IIFE to scope variables
+  - Use unique variable names
+  - Check for existing handlers before adding
+</Accordion>
+
+## Examples Repository
+
+For more examples, check the [Frappe Wiki GitHub repository](https://github.com/frappe/wiki) discussions and community contributions.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Wiki Settings" icon="gear" href="/deployment/settings">
+    Learn about all Wiki Settings configuration options
+  </Card>
+  <Card title="Search Setup" icon="magnifying-glass" href="/deployment/search-setup">
+    Configure search functionality for your wiki
+  </Card>
+</CardGroup>

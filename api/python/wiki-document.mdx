@@ -1,0 +1,361 @@
+---
+title: WikiDocument
+description: API reference for the WikiDocument class
+---
+
+The `WikiDocument` class represents a document in the Frappe Wiki system. It extends `NestedSet` to provide hierarchical document organization.
+
+## Class Definition
+
+```python
+from frappe.utils.nestedset import NestedSet
+
+class WikiDocument(NestedSet):
+    pass
+```
+
+**Location:** `wiki/frappe_wiki/doctype/wiki_document/wiki_document.py`
+
+## DocType Fields
+
+<ParamField path="title" type="Data" required>
+  The title of the document
+</ParamField>
+
+<ParamField path="route" type="Data">
+  The URL route for accessing this document
+</ParamField>
+
+<ParamField path="slug" type="Data">
+  URL-friendly version of the title
+</ParamField>
+
+<ParamField path="doc_key" type="Data">
+  Unique immutable identifier (12-character hash)
+</ParamField>
+
+<ParamField path="content" type="Code">
+  Markdown content of the document
+</ParamField>
+
+<ParamField path="is_published" type="Check" default="0">
+  Whether the document is published and visible to users
+</ParamField>
+
+<ParamField path="is_private" type="Check" default="0">
+  Whether the document requires login to view
+</ParamField>
+
+<ParamField path="is_group" type="Check" default="0">
+  Whether this is a group node (folder) or a leaf document
+</ParamField>
+
+<ParamField path="is_external_link" type="Check" default="0">
+  Whether this document links to an external URL
+</ParamField>
+
+<ParamField path="external_url" type="Data">
+  External URL if is_external_link is enabled
+</ParamField>
+
+<ParamField path="parent_wiki_document" type="Link">
+  Link to parent WikiDocument in the tree
+</ParamField>
+
+<ParamField path="sort_order" type="Int" default="0">
+  Order of this document among siblings
+</ParamField>
+
+<ParamField path="lft" type="Int">
+  Left value for nested set (internal)
+</ParamField>
+
+<ParamField path="rgt" type="Int">
+  Right value for nested set (internal)
+</ParamField>
+
+<ParamField path="old_parent" type="Link">
+  Previous parent document (for tracking moves)
+</ParamField>
+
+## Instance Methods
+
+### validate()
+
+Validates the document before saving.
+
+```python
+def validate(self):
+    self.set_doc_key()
+    self.set_slug()
+    self.set_sort_order_for_new_document()
+    self.set_route()
+    self.remove_leading_slash_from_route()
+    self.validate_unique_route_for_leaves()
+    self.set_boilerplate_content()
+```
+
+**Source:** `wiki_document.py:86`
+
+### get_root_group()
+
+Returns the root group (Wiki Space root) for this document.
+
+```python
+def get_root_group(self) -> str | None
+```
+
+**Returns:** `str | None` - Name of the root Wiki Document
+
+**Example:**
+```python
+doc = frappe.get_doc("Wiki Document", "DOC-001")
+root = doc.get_root_group()
+```
+
+**Source:** `wiki_document.py:212`
+
+### get_wiki_space()
+
+Returns the Wiki Space this document belongs to.
+
+```python
+def get_wiki_space(self) -> dict | None
+```
+
+**Returns:** `dict | None` - Dictionary with `name`, `space_name`, and `route` fields
+
+**Example:**
+```python
+doc = frappe.get_doc("Wiki Document", "DOC-001")
+space = doc.get_wiki_space()
+if space:
+    print(f"Space: {space['space_name']}")
+```
+
+**Source:** `wiki_document.py:219`
+
+### get_edit_link()
+
+Returns the edit URL for this document.
+
+```python
+def get_edit_link(self) -> str
+```
+
+**Returns:** `str` - Edit URL path
+
+**Example:**
+```python
+doc = frappe.get_doc("Wiki Document", "DOC-001")
+edit_url = doc.get_edit_link()
+# Returns: "/wiki/spaces/SPACE-001/page/DOC-001"
+```
+
+**Source:** `wiki_document.py:228`
+
+### check_guest_access()
+
+Validates if the current user has permission to view this document. Raises `PermissionError` if the document is private and user is a guest.
+
+```python
+def check_guest_access(self)
+```
+
+**Raises:** `frappe.PermissionError` - If access is denied
+
+**Source:** `wiki_document.py:234`
+
+### check_published()
+
+Validates if the document is published. Raises `DoesNotExistError` if not published.
+
+```python
+def check_published(self)
+```
+
+**Raises:** `frappe.DoesNotExistError` - If document is not published
+
+**Source:** `wiki_document.py:245`
+
+### get_tree_and_navigation()
+
+Returns the nested tree structure and adjacent documents for navigation.
+
+```python
+def get_tree_and_navigation(self) -> tuple[list, dict]
+```
+
+**Returns:** `tuple[list, dict]` - Tuple of (nested_tree, adjacent_docs)
+
+**Example:**
+```python
+doc = frappe.get_doc("Wiki Document", "DOC-001")
+tree, nav = doc.get_tree_and_navigation()
+# nav contains {'prev': {...}, 'next': {...}}
+```
+
+**Source:** `wiki_document.py:262`
+
+### get_breadcrumbs()
+
+Returns the breadcrumb trail for this document.
+
+```python
+@frappe.whitelist()
+def get_breadcrumbs(self) -> dict
+```
+
+**Returns:** `dict` - Dictionary with `ancestors`, `space`, and `current` keys
+
+**Example:**
+```python
+doc = frappe.get_doc("Wiki Document", "DOC-001")
+breadcrumbs = doc.get_breadcrumbs()
+for ancestor in breadcrumbs['ancestors']:
+    print(ancestor['title'])
+```
+
+**Source:** `wiki_document.py:280`
+
+### get_web_context()
+
+Returns all context data needed to render this document on the web.
+
+```python
+def get_web_context(self) -> dict
+```
+
+**Returns:** `dict` - Context dictionary with document data, rendered content, TOC, navigation, etc.
+
+**Example:**
+```python
+doc = frappe.get_doc("Wiki Document", "DOC-001")
+context = doc.get_web_context()
+rendered_html = context['rendered_content']
+toc = context['toc_headings']
+```
+
+**Source:** `wiki_document.py:315`
+
+### get_children_count()
+
+Returns the count of children documents that the user can read.
+
+```python
+@frappe.whitelist()
+def get_children_count(self) -> int
+```
+
+**Returns:** `int` - Number of readable child documents
+
+**Example:**
+```python
+group = frappe.get_doc("Wiki Document", "GROUP-001")
+count = group.get_children_count()
+print(f"This group has {count} children")
+```
+
+**Source:** `wiki_document.py:372`
+
+### delete_with_children()
+
+Deletes this document and all its children.
+
+```python
+@frappe.whitelist()
+def delete_with_children(self) -> dict
+```
+
+**Returns:** `dict` - Dictionary with `deleted` and `children_deleted` keys
+
+**Raises:** `frappe.PermissionError` - If user lacks delete permission
+
+**Example:**
+```python
+doc = frappe.get_doc("Wiki Document", "DOC-001")
+result = doc.delete_with_children()
+print(f"Deleted {result['children_deleted']} children")
+```
+
+**Source:** `wiki_document.py:386`
+
+## Module Functions
+
+### get_breadcrumbs(name)
+
+Standalone function to get breadcrumbs for a document by name.
+
+```python
+@frappe.whitelist()
+def get_breadcrumbs(name: str) -> dict
+```
+
+<ParamField path="name" type="str" required>
+  Name of the Wiki Document
+</ParamField>
+
+**Returns:** `dict` - Breadcrumb data
+
+**Source:** `wiki_document.py:542`
+
+### get_page_data(route)
+
+Returns all data needed to render a page by route (for client-side navigation).
+
+```python
+@frappe.whitelist(allow_guest=True)
+def get_page_data(route: str) -> dict
+```
+
+<ParamField path="route" type="str" required>
+  The document route
+</ParamField>
+
+**Returns:** `dict` - Page context data
+
+**Raises:** `frappe.DoesNotExistError` - If page not found
+
+**Example:**
+```python
+import frappe
+data = frappe.call("wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_page_data", route="docs/getting-started")
+```
+
+**Source:** `wiki_document.py:549`
+
+### build_nested_wiki_tree(documents)
+
+Builds a nested tree structure from a flat list of document names.
+
+```python
+def build_nested_wiki_tree(documents: list[str]) -> list
+```
+
+<ParamField path="documents" type="list[str]" required>
+  List of Wiki Document names
+</ParamField>
+
+**Returns:** `list` - Nested tree structure with children
+
+**Source:** `wiki_document.py:468`
+
+### get_adjacent_documents(nested_tree, current_route)
+
+Finds the previous and next documents in tree order.
+
+```python
+def get_adjacent_documents(nested_tree: list, current_route: str) -> dict
+```
+
+<ParamField path="nested_tree" type="list" required>
+  Nested tree structure
+</ParamField>
+
+<ParamField path="current_route" type="str" required>
+  Route of the current document
+</ParamField>
+
+**Returns:** `dict` - Dictionary with `prev` and `next` keys
+
+**Source:** `wiki_document.py:592`

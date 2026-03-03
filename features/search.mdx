@@ -1,0 +1,411 @@
+---
+title: Search
+description: Full-text search with SQLite FTS5 or RedisSearch integration
+---
+
+## Overview
+
+Frappe Wiki provides powerful full-text search capabilities across all published documentation. The system supports multiple search backends: SQLite FTS5 (default), RedisSearch, and legacy Frappe Web Search.
+
+<Note>
+SQLite-based search is the default and recommended option. It provides excellent performance for most installations without external dependencies.
+</Note>
+
+## Search Backends
+
+### SQLite FTS5 (Default)
+
+Frappe Wiki uses SQLite's Full-Text Search extension (FTS5) for fast, accurate search results.
+
+**Advantages:**
+- No external dependencies
+- Excellent performance for small to medium datasets
+- Advanced tokenization with diacritic removal
+- Automatic index updates
+- Simple setup
+
+**Configuration:**
+```python
+# Wiki Settings
+use_sqlite_for_search = 1  # Default
+```
+
+The SQLite search engine is implemented in `WikiSQLiteSearch` class, which extends Frappe's base `SQLiteSearch` class.
+
+### RedisSearch
+
+For large-scale installations, RedisSearch provides distributed search capabilities.
+
+**Advantages:**
+- Horizontal scaling
+- Sub-millisecond latency
+- Advanced search features
+- Better for high-traffic sites
+
+**Requirements:**
+- Redis server with RediSearch module
+- Additional configuration
+
+**Configuration:**
+```python
+# Wiki Settings
+use_redisearch_for_search = 1
+use_sqlite_for_search = 0  # SQLite takes precedence if enabled
+```
+
+<Warning>
+SQLite search takes precedence over RedisSearch if both are enabled. Disable SQLite search if you want to use RedisSearch.
+</Warning>
+
+### Frappe Web Search
+
+Legacy search backend using Frappe's built-in web search.
+
+**Not Recommended:**
+- Slower than modern alternatives
+- Less accurate results
+- No advanced tokenization
+
+Only used when both SQLite and RedisSearch are disabled.
+
+## Search Index Configuration
+
+### Indexed Fields
+
+The search index includes the following fields from Wiki Documents:
+
+**Text Fields** (searchable):
+- `title`: Page title
+- `content`: Markdown content (with markdown syntax stripped)
+
+**Metadata Fields** (filterable):
+- `doctype`: Always "Wiki Document"
+- `name`: Document name (ID)
+- `route`: URL route
+- `space`: Root Wiki Space
+- `published`: Publishing status (0 or 1)
+- `modified`: Last modification timestamp
+
+### Tokenization
+
+The SQLite FTS5 tokenizer is configured with:
+```python
+tokenizer = "unicode61 remove_diacritics 2 tokenchars '-_'"
+```
+
+This provides:
+- Unicode support (unicode61)
+- Diacritic normalization (café → cafe)
+- Hyphen and underscore as token characters (useful for code/identifiers)
+
+### Indexable Content
+
+Only documents meeting these criteria are indexed:
+
+```python
+filters = {
+    "is_published": 1,        # Published only
+    "is_group": 0,            # Pages, not groups
+    "is_external_link": 0     # Internal content only
+}
+```
+
+## Markdown Stripping
+
+Before indexing, Markdown syntax is stripped from content for cleaner search results. The `_strip_markdown()` method removes:
+
+- Code blocks (\`\`\` ... \`\`\`)
+- Inline code (\`code\`)
+- Custom directives (:::note, :::danger, etc.)
+- Images ![alt](url)
+- Link syntax [text](url) → text only
+- Headers (# ## ### etc.)
+- Bold/italic markers (\*\*text\*\*, \_text\_)
+- Blockquotes (> text)
+- Horizontal rules (---, \*\*\*, \_\_\_)
+- HTML tags
+- Excess whitespace
+
+This ensures search results focus on actual content, not formatting syntax.
+
+<Accordion title="Markdown Stripping Implementation">
+The stripping logic uses regular expressions to progressively clean the content:
+
+```python
+# Remove code blocks
+text = re.sub(r"```[\s\S]*?```", " ", text)
+
+# Remove inline code
+text = re.sub(r"`[^`]+`", " ", text)
+
+# Remove custom directives
+text = re.sub(r":::[a-z]+\s*", " ", text)
+
+# Convert links [text](url) to just text
+text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+
+# ... and more
+```
+
+See `wiki_sqlite_search.py:44-84` for complete implementation.
+</Accordion>
+
+## Space-Scoped Search
+
+Search results can be filtered by Wiki Space, enabling space-specific search experiences.
+
+### Space Detection
+
+When documents are indexed, the system determines their root space:
+
+```python
+def _get_root_space(self, docname):
+    wiki_doc = frappe.get_doc("Wiki Document", docname)
+    return wiki_doc.get_root_group() or docname
+```
+
+This traverses the tree to find the root group, then looks up the associated Wiki Space.
+
+### Filtering by Space
+
+The search API accepts an optional `space` parameter:
+
+```python
+frappe.call({
+    method: 'frappe_wiki.doctype.wiki_document.search.search',
+    args: {
+        query: 'installation',
+        space: 'docs'  # Optional: scope to specific space
+    }
+})
+```
+
+<Note>
+Space-scoped search is useful for multi-tenant documentation sites where users should only see results from their relevant space.
+</Note>
+
+## Search API
+
+### Whitelist Method
+
+The primary search endpoint is exposed via a whitelisted method:
+
+```python
+@frappe.whitelist(allow_guest=True)
+def search(query: str, space: str | None = None) -> dict
+```
+
+**Parameters:**
+- `query` (required): Search query string
+- `space` (optional): Wiki Space name to scope results
+
+**Returns:**
+```python
+{
+    "results": [
+        {
+            "name": "doc-name",
+            "title": "Page Title",
+            "route": "docs/getting-started/install",
+            "content": "...snippet with highlights...",
+            "score": 0.95
+        },
+        # ... more results
+    ],
+    "total": 42
+}
+```
+
+### Result Ranking
+
+Results are ranked by relevance score:
+- Title matches score higher than content matches
+- Multiple term matches score higher
+- Proximity of terms affects score
+- More recent documents may score higher (metadata field)
+
+### Content Snippets
+
+Search results include content snippets showing match context:
+- Extracts text around matched terms
+- Highlights matched terms (implementation-dependent)
+- Truncates to reasonable length
+
+## Search Performance
+
+### Permission Filtering
+
+Search applies permission filters automatically:
+
+```python
+def get_search_filters(self):
+    return {"published": 1}
+```
+
+Only published documents appear in guest user results. Authenticated users with appropriate roles may see additional results.
+
+### Index Updates
+
+The search index is automatically updated when:
+- New documents are published
+- Document content or metadata changes
+- Documents are unpublished or deleted
+
+Frappe's SQLiteSearch base class handles incremental updates efficiently.
+
+### Query Optimization
+
+For best performance:
+
+**Good Queries:**
+- Specific terms: "docker installation"
+- Exact phrases: ""getting started""
+- Moderate length: 2-10 words
+
+**Problematic Queries:**
+- Single letters: "a" (too common)
+- Very long queries: > 50 words (slow)
+- Only stopwords: "the and or" (filtered out)
+
+<Note>
+The FTS5 tokenizer automatically handles stopwords and common terms, so you don't need to pre-process queries.
+</Note>
+
+## Search UI Integration
+
+### Search Bar Toggle
+
+The search bar can be enabled/disabled globally:
+
+```python
+# Wiki Settings
+add_search_bar = 1  # Show search bar in UI
+```
+
+### Search Widget
+
+The frontend search component (typically in Vue SPA) should:
+1. Provide search input with debouncing (300-500ms)
+2. Call the search API with user query
+3. Display results with title, route, and snippet
+4. Handle empty results gracefully
+5. Support keyboard navigation (arrow keys, enter)
+6. Link results to document routes
+
+### Search Behavior
+
+**As-You-Type Search:**
+- Debounce user input (500ms recommended)
+- Update results on each query change
+- Show loading indicator during fetch
+
+**Result Navigation:**
+- Click result → navigate to route
+- Enter key → navigate to first result
+- Arrow keys → highlight results
+
+## Indexing Settings
+
+The `INDEX_SCHEMA` defines how content is indexed:
+
+```python
+INDEX_SCHEMA = {
+    "text_fields": ["title", "content"],
+    "metadata_fields": ["doctype", "name", "route", "space", "published", "modified"],
+    "tokenizer": "unicode61 remove_diacritics 2 tokenchars '-_'"
+}
+```
+
+**text_fields:**  
+Full-text indexed with tokenization
+
+**metadata_fields:**  
+Indexed for filtering and sorting, but not tokenized
+
+**tokenizer:**  
+SQLite FTS5 tokenizer configuration
+
+## Reindexing
+
+To rebuild the search index (e.g., after schema changes):
+
+```python
+# Via Frappe console or script
+from wiki.frappe_wiki.doctype.wiki_document.wiki_sqlite_search import WikiSQLiteSearch
+
+search_engine = WikiSQLiteSearch()
+search_engine.reindex()  # Rebuilds index from scratch
+```
+
+<Warning>
+Reindexing can be slow for large documentation sets. Consider running during low-traffic periods.
+</Warning>
+
+## Troubleshooting
+
+### No Results Found
+
+**Possible Causes:**
+1. Documents not published (`is_published = 0`)
+2. Search index not built yet
+3. Query terms too generic or misspelled
+4. Space filter excludes relevant results
+
+**Solutions:**
+- Verify document publishing status
+- Trigger reindex if needed
+- Try broader or alternative queries
+- Remove space filter for testing
+
+### Slow Search Performance
+
+**Possible Causes:**
+1. Very large dataset (> 100k documents)
+2. Complex queries with many terms
+3. Database not optimized
+
+**Solutions:**
+- Consider switching to RedisSearch
+- Optimize database (VACUUM, ANALYZE)
+- Simplify queries
+- Add more specific filters
+
+### Stale Results
+
+**Possible Causes:**
+1. Index not updating automatically
+2. Caching layer returning old data
+
+**Solutions:**
+- Trigger manual reindex
+- Clear application cache
+- Verify document hooks are firing
+
+## Best Practices
+
+<Steps>
+  <Step title="Enable SQLite Search">
+    Use SQLite FTS5 for most installations—it's fast and requires no external dependencies
+  </Step>
+  
+  <Step title="Publish Content">
+    Only published documents are searchable. Ensure important content is marked `is_published = 1`
+  </Step>
+  
+  <Step title="Use Descriptive Titles">
+    Titles are heavily weighted in search ranking—make them clear and keyword-rich
+  </Step>
+  
+  <Step title="Write Clear Content">
+    Use natural language and relevant keywords users are likely to search for
+  </Step>
+  
+  <Step title="Test Search Regularly">
+    Periodically search for key topics to ensure discoverability
+  </Step>
+</Steps>
+
+## Related Features
+
+- [Wiki Documents](/features/wiki-documents) - Content being searched
+- [Wiki Spaces](/features/wiki-spaces) - Space-scoped search filtering

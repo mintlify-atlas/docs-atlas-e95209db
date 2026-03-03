@@ -1,0 +1,533 @@
+---
+title: Documents API
+description: Read and manage wiki documents
+---
+
+## Overview
+
+The Documents API provides access to individual wiki pages, their content, metadata, and navigation.
+
+## Get Page Data
+
+Retrieve all data needed to render a wiki page. Allows guest access for published pages.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_page_data
+```
+
+### Parameters
+
+<ParamField path="route" type="string" required>
+  URL route of the wiki page (e.g., "docs/getting-started/installation")
+</ParamField>
+
+### Response
+
+<ResponseField name="message" type="object">
+  <Expandable title="Page Data Object">
+    <ResponseField name="doc" type="object">
+      The Wiki Document object with all fields
+    </ResponseField>
+    
+    <ResponseField name="title" type="string">
+      Page title
+    </ResponseField>
+    
+    <ResponseField name="route" type="string">
+      URL route
+    </ResponseField>
+    
+    <ResponseField name="rendered_content" type="string">
+      HTML-rendered markdown content
+    </ResponseField>
+    
+    <ResponseField name="raw_markdown" type="string">
+      Original markdown source
+    </ResponseField>
+    
+    <ResponseField name="toc_headings" type="array">
+      Table of contents extracted from headings
+    </ResponseField>
+    
+    <ResponseField name="wiki_space" type="object">
+      Wiki space information
+    </ResponseField>
+    
+    <ResponseField name="wiki_spaces_for_switcher" type="array">
+      List of wiki spaces for app switcher
+    </ResponseField>
+    
+    <ResponseField name="navbar_items" type="array">
+      Navigation bar items
+    </ResponseField>
+    
+    <ResponseField name="nested_tree" type="array">
+      Complete document tree for sidebar
+    </ResponseField>
+    
+    <ResponseField name="prev_doc" type="object">
+      Previous page in navigation
+    </ResponseField>
+    
+    <ResponseField name="next_doc" type="object">
+      Next page in navigation
+    </ResponseField>
+    
+    <ResponseField name="edit_link" type="string">
+      Link to edit the page
+    </ResponseField>
+    
+    <ResponseField name="last_updated" type="string">
+      Human-readable last update time (e.g., "2 hours ago")
+    </ResponseField>
+    
+    <ResponseField name="last_updated_on" type="datetime">
+      Formatted last update timestamp
+    </ResponseField>
+    
+    <ResponseField name="favicon" type="string">
+      Wiki space favicon URL
+    </ResponseField>
+    
+    <ResponseField name="hide_chrome" type="boolean">
+      Whether to hide navigation chrome (true for orphan pages)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_page_data \
+  -H "Content-Type: application/json" \
+  -d '{"route": "docs/getting-started"}'
+```
+
+**Response:**
+
+```json
+{
+  "message": {
+    "doc": {
+      "name": "WD-001",
+      "title": "Getting Started",
+      "content": "# Getting Started\n\nWelcome to our wiki...",
+      "is_published": true,
+      "is_group": false,
+      "route": "docs/getting-started"
+    },
+    "title": "Getting Started",
+    "route": "docs/getting-started",
+    "rendered_content": "<h1>Getting Started</h1><p>Welcome to our wiki...</p>",
+    "raw_markdown": "# Getting Started\n\nWelcome to our wiki...",
+    "toc_headings": [
+      {
+        "level": 1,
+        "text": "Getting Started",
+        "id": "getting-started"
+      }
+    ],
+    "nested_tree": [],
+    "prev_doc": null,
+    "next_doc": {
+      "name": "WD-002",
+      "title": "Installation",
+      "route": "docs/installation"
+    },
+    "edit_link": "/app/wiki-document/WD-001",
+    "last_updated": "2 hours ago",
+    "last_updated_on": "2025-01-15 10:30:00",
+    "hide_chrome": false
+  }
+}
+```
+
+### Guest Access
+
+This endpoint allows guest access for:
+
+- Published pages (`is_published = 1`)
+- Non-private pages (when `is_private = 0` or `allow_guest = 1`)
+
+Private or unpublished pages require authentication.
+
+## Get Breadcrumbs
+
+Get the breadcrumb trail for a wiki document.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_breadcrumbs
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Wiki Document identifier
+</ParamField>
+
+### Response
+
+<ResponseField name="message" type="object">
+  <Expandable title="Breadcrumbs Object">
+    <ResponseField name="ancestors" type="array">
+      Array of ancestor documents (from root to current, excluding root)
+      
+      <Expandable title="Ancestor Object">
+        <ResponseField name="name" type="string">
+          Document identifier
+        </ResponseField>
+        
+        <ResponseField name="title" type="string">
+          Document title
+        </ResponseField>
+        
+        <ResponseField name="is_group" type="boolean">
+          Whether this is a group
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="space" type="object">
+      Wiki space information
+      
+      <Expandable title="Space Object">
+        <ResponseField name="name" type="string">
+          Space identifier
+        </ResponseField>
+        
+        <ResponseField name="space_name" type="string">
+          Display name
+        </ResponseField>
+        
+        <ResponseField name="route" type="string">
+          Base route
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="current" type="object">
+      Current document information
+      
+      <Expandable title="Current Object">
+        <ResponseField name="name" type="string">
+          Document identifier
+        </ResponseField>
+        
+        <ResponseField name="title" type="string">
+          Document title
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_breadcrumbs \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "WD-005"}'
+```
+
+**Response:**
+
+```json
+{
+  "message": {
+    "ancestors": [
+      {
+        "name": "WD-001",
+        "title": "Getting Started",
+        "is_group": true
+      },
+      {
+        "name": "WD-002",
+        "title": "Installation",
+        "is_group": true
+      }
+    ],
+    "space": {
+      "name": "WS-001",
+      "space_name": "Documentation",
+      "route": "docs"
+    },
+    "current": {
+      "name": "WD-005",
+      "title": "Linux Setup"
+    }
+  }
+}
+```
+
+## Get Children Count
+
+Get the count of children (descendants) for a wiki document that the user can read.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_children_count
+```
+
+<Note>
+  This is a DocType method. It must be called on a specific document instance.
+</Note>
+
+### Example
+
+```bash
+curl -X POST "https://your-site.com/api/resource/Wiki Document/WD-001" \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cmd": "wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_children_count",
+    "doc": {"name": "WD-001"}
+  }'
+```
+
+## Delete With Children
+
+Delete a wiki document and all its children. Requires delete permission.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_document.wiki_document.delete_with_children
+```
+
+<Warning>
+  **Destructive Operation**
+  
+  This permanently deletes the document and all descendants. This action cannot be undone.
+</Warning>
+
+### Response
+
+<ResponseField name="deleted" type="string">
+  Name of the deleted document
+</ResponseField>
+
+<ResponseField name="children_deleted" type="integer">
+  Number of child documents deleted
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST "https://your-site.com/api/resource/Wiki Document/WD-001" \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cmd": "wiki.frappe_wiki.doctype.wiki_document.wiki_document.delete_with_children",
+    "doc": {"name": "WD-001"}
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "message": {
+    "deleted": "WD-001",
+    "children_deleted": 15
+  }
+}
+```
+
+## Search Documents
+
+Search for wiki documents. Allows guest access.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_document.search.search
+```
+
+### Parameters
+
+<ParamField path="query" type="string" required>
+  Search query text
+</ParamField>
+
+<ParamField path="space" type="string">
+  Filter by wiki space (optional)
+</ParamField>
+
+### Response
+
+Returns an array of matching documents with relevance scores and highlighted excerpts.
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.frappe_wiki.doctype.wiki_document.search.search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "installation guide",
+    "space": "WS-001"
+  }'
+```
+
+## Document Structure
+
+### Content Format
+
+Wiki documents store content as Markdown:
+
+- `content` field: Raw markdown source
+- `rendered_content`: HTML generated from markdown (in page data response)
+
+### Markdown Rendering
+
+The API uses a custom markdown renderer that:
+
+- Supports GitHub Flavored Markdown (GFM)
+- Extracts headings for table of contents
+- Processes wikilinks: `[[Page Name]]`
+- Renders code blocks with syntax highlighting
+- Supports Mermaid diagrams
+- Handles image uploads and references
+
+### Table of Contents
+
+TOC headings are automatically extracted:
+
+```json
+{
+  "toc_headings": [
+    {
+      "level": 1,
+      "text": "Getting Started",
+      "id": "getting-started"
+    },
+    {
+      "level": 2,
+      "text": "Prerequisites",
+      "id": "prerequisites"
+    }
+  ]
+}
+```
+
+## Navigation
+
+### Previous/Next Documents
+
+The `get_page_data` response includes adjacent documents in the tree:
+
+```json
+{
+  "prev_doc": {
+    "name": "WD-001",
+    "title": "Introduction",
+    "route": "docs/introduction"
+  },
+  "next_doc": {
+    "name": "WD-003",
+    "title": "Configuration",
+    "route": "docs/configuration"
+  }
+}
+```
+
+Navigation follows the tree structure in depth-first order.
+
+### Sidebar Tree
+
+The complete nested tree is included for rendering sidebars:
+
+```json
+{
+  "nested_tree": [
+    {
+      "name": "WD-001",
+      "title": "Getting Started",
+      "is_group": true,
+      "children": [
+        {
+          "name": "WD-002",
+          "title": "Installation",
+          "is_group": false,
+          "children": []
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Permissions
+
+### Read Permissions
+
+- **Published pages**: Accessible by guests (if not private)
+- **Unpublished pages**: Require authentication
+- **Private pages**: Require specific user permissions
+
+### Write Permissions
+
+- Require Wiki User role or higher
+- Subject to role-based permissions
+- Wiki Managers have full access
+
+### Delete Permissions
+
+Deletion requires:
+
+- Delete permission on the document
+- Delete permission on all descendants
+- Fails if any child cannot be deleted
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Client-Side Rendering">
+    Use `get_page_data` for client-side navigation:
+    
+    - Fetches all data needed to render a page
+    - Includes navigation context
+    - Returns rendered HTML (no client-side markdown parsing needed)
+    - Cache responses for offline support
+  </Accordion>
+  
+  <Accordion title="Search Implementation">
+    The search API uses full-text search:
+    
+    - Results are ranked by relevance
+    - Filters respect user permissions
+    - Consider debouncing search queries
+    - Show results as user types (autocomplete)
+  </Accordion>
+  
+  <Accordion title="Handling Unpublished Content">
+    - Check `is_published` before displaying
+    - Show edit indicators for draft content
+    - Provide preview mode for editors
+    - Handle 404 gracefully for non-existent pages
+  </Accordion>
+</AccordionGroup>
+
+## Error Handling
+
+### Page Not Found
+
+```json
+{
+  "exc_type": "DoesNotExistError",
+  "exception": "Page not found"
+}
+```
+
+### Permission Denied
+
+```json
+{
+  "exc_type": "PermissionError",
+  "exception": "Insufficient Permission for Wiki Document"
+}
+```
+
+### Invalid Route
+
+```json
+{
+  "exc_type": "ValidationError",
+  "exception": "Invalid route format"
+}
+```

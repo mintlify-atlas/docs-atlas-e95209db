@@ -1,0 +1,539 @@
+---
+title: Change Requests
+description: GitBook-style change requests with snapshot-based revisions and 3-way merge
+---
+
+## Overview
+
+Change Requests (CRs) provide a GitBook-like workflow for managing all edits to wiki content. All changes—even from Wiki Managers—must go through CRs. This ensures proper review, approval, and conflict detection before changes are merged into the published content.
+
+<Note>
+The Change Request system uses **snapshot-based revisions** with **3-way merge** logic, similar to Git. The current `Wiki Document` tree remains the source of truth for published content.
+</Note>
+
+## Core Concepts
+
+### Snapshot-Based Revisions
+
+Each Change Request operates on immutable snapshots called **Wiki Revisions**:
+
+**Base Revision**  
+Snapshot of the main tree when the CR was created (starting point)
+
+**Head Revision**  
+Working snapshot containing all edits made in the CR (continuously updated)
+
+**Merge Revision**  
+Final snapshot created during merge (combines base + head + current main)
+
+### 3-Way Merge
+
+When merging, the system performs a 3-way comparison:
+- **Base**: CR's base revision (what it started from)
+- **Ours**: Current main revision (published content)
+- **Theirs**: CR's head revision (proposed changes)
+
+This detects conflicts when both the main tree and CR modify the same content.
+
+## Change Request Lifecycle
+
+<Steps>
+  <Step title="Create CR">
+    Initialize a new Change Request with:
+    - Title and description
+    - Target Wiki Space
+    - Automatic base/head revision creation
+    - Status: **Draft**
+  </Step>
+  
+  <Step title="Make Edits">
+    All changes apply to the CR's head revision:
+    - Create pages
+    - Edit content and metadata
+    - Move and reorder pages
+    - Delete pages
+    - Changes auto-save with debounce
+  </Step>
+  
+  <Step title="Request Review">
+    Move to **Open** or **In Review** status and assign reviewers
+  </Step>
+  
+  <Step title="Review Process">
+    Reviewers can:
+    - Approve the CR
+    - Request changes
+    - Add comments
+    Status updates: **Approved** or **Changes Requested**
+  </Step>
+  
+  <Step title="Merge or Archive">
+    - **Merge**: Apply changes to main tree (status: **Merged**)
+    - **Archive**: Discard without merging (status: **Archived**)
+  </Step>
+</Steps>
+
+## Change Request Fields
+
+### Basic Information
+
+**title** (required)  
+Descriptive name for the change request
+
+**wiki_space** (required)  
+Target Wiki Space for changes
+
+**status** (required)  
+Current state:
+- `Draft` - Initial creation
+- `Open` - Ready for review
+- `In Review` - Under active review
+- `Changes Requested` - Needs updates
+- `Approved` - Ready to merge
+- `Merged` - Successfully applied
+- `Archived` - Discarded
+
+**description**  
+Optional context about the changes
+
+### Revisions
+
+**base_revision** (required)  
+Linked to Wiki Space's `main_revision` at CR creation time
+
+**head_revision** (required)  
+Working snapshot, updated as edits are made (marked with `is_working = 1`)
+
+**merge_revision** (read-only)  
+Created during merge process, becomes the new main revision
+
+### Status Tracking
+
+**outdated** (read-only)  
+Set to `1` when main_revision advances past the CR's base_revision
+
+**merged_by** (read-only)  
+User who completed the merge
+
+**merged_at** (read-only)  
+Timestamp of merge completion
+
+**archived_at** (read-only)  
+Timestamp if CR was archived
+
+### Participants
+
+**reviewers** (Table: Wiki CR Reviewer)  
+- `reviewer`: User assigned to review
+- `status`: Requested | Approved | Changes Requested
+- `reviewed_at`: Review timestamp
+- `comment`: Review feedback
+
+**participants** (Table: Wiki CR Participant)  
+- `user`: Participant user
+- `role`: Author | Reviewer | Contributor | Viewer
+
+## Creating a Change Request
+
+Use the `create_change_request` API endpoint:
+
+```python
+# Server-side API
+frappe.call({
+    method: 'create_change_request',
+    args: {
+        wiki_space: 'docs',
+        title: 'Update installation guide',
+        description: 'Add Docker installation instructions'
+    }
+})
+```
+
+The system automatically:
+1. Creates the CR document with status `Draft`
+2. Sets `base_revision` to current `Wiki Space.main_revision`
+3. Creates a working `head_revision` snapshot from base
+4. Marks head revision with `is_working = 1`
+
+## Editing in a Change Request
+
+All edits apply to the CR's `head_revision` through dedicated API endpoints.
+
+### Create Page
+
+```python
+create_cr_page(name, parent_key, title, slug, is_group, is_published, content)
+```
+
+Creates a new Wiki Revision Item in the head revision.
+
+### Update Page
+
+```python
+update_cr_page(name, doc_key, fields)
+```
+
+Updates fields for an existing revision item:
+- `title`
+- `content_blob` (references Wiki Content Blob for deduplication)
+- `is_published`
+- `is_group`
+- Metadata fields
+
+### Move Page
+
+```python
+move_cr_page(name, doc_key, new_parent_key, new_order_index)
+```
+
+Changes page location in tree:
+- Updates `parent_key`
+- Updates `order_index` for positioning
+
+### Reorder Children
+
+```python
+reorder_cr_children(name, parent_key, ordered_doc_keys[])
+```
+
+Reorders all children under a parent in one operation.
+
+### Delete Page
+
+```python
+delete_cr_page(name, doc_key)
+```
+
+Marks page as deleted:
+- Sets `is_deleted = 1` (soft delete)
+- Preserves data for diff/merge logic
+
+<Note>
+All edit operations use **autosave with debounce**. Changes are automatically persisted to the head revision without explicit save actions—just like GitBook.
+</Note>
+
+## Wiki Revisions
+
+Revisions are immutable snapshots of the entire Wiki Space tree.
+
+### Revision Fields
+
+**wiki_space** (required)  
+The space this revision belongs to
+
+**change_request** (optional)  
+Linked CR if this is part of a CR workflow
+
+**parent_revision** (optional)  
+Previous revision for linear history
+
+**message**  
+Commit message describing the changes
+
+**is_merge** (default 0)  
+Flags if this revision resulted from a merge
+
+**is_working** (default 0)  
+Flags if this is a CR's active working head
+
+**is_overlay** (default 0)  
+Flags if this revision is an overlay for selective changes
+
+**created_by** (read-only)  
+User who created the revision
+
+**tree_hash** (read-only)  
+Hash of tree structure for quick diff detection
+
+**content_hash** (read-only)  
+Hash of all content for change detection
+
+**doc_count** (read-only)  
+Number of documents in this revision
+
+### Revision Items
+
+Each revision contains Wiki Revision Items (one per document):
+
+```python
+Wiki Revision Item fields:
+- revision: Link to parent Wiki Revision
+- doc_key: Immutable document identifier
+- title, slug, route: Document metadata
+- is_group, is_published, is_external_link: Type flags
+- parent_key: Tree parent reference
+- order_index: Sibling ordering
+- content_blob: Link to Wiki Content Blob (deduplicated)
+- is_deleted: Soft delete flag
+```
+
+### Content Deduplication
+
+Wiki Content Blobs provide content-addressed storage:
+
+**hash** (required, unique)  
+Hash of content for deduplication
+
+**content** (required)  
+Actual Markdown content (Long Text)
+
+**content_type** (default "markdown")  
+Content format identifier
+
+**size** (read-only)  
+Content size in bytes
+
+Multiple revision items can reference the same blob, saving storage when content is unchanged.
+
+## Reviewing Changes
+
+### Request Review
+
+```python
+request_review(name, reviewers[])
+```
+
+Assigns reviewers and adds them to the `reviewers` table.
+
+### Review Action
+
+```python
+review_action(name, reviewer, status, comment=None)
+```
+
+Parameters:
+- `status`: "Approved" | "Changes Requested"
+- `comment`: Optional feedback
+
+Updates the reviewer's entry with timestamp and decision.
+
+### Viewing Diffs
+
+The system provides two diff scopes:
+
+**Summary Diff**
+```python
+diff_change_request(name, scope="summary")
+```
+Returns list of changed pages between base and head.
+
+**Page Diff**
+```python
+diff_change_request(name, scope="page", doc_key=doc_key)
+```
+Returns detailed Markdown diff for a specific page.
+
+<Accordion title="Diff Implementation Details">
+The diff viewer uses **Diffs** (`@pierre/diffs`) following the official documentation at diffs.com:
+
+- Unified diff format
+- Syntax highlighting
+- Line-by-line comparison
+- Worker pool for performance
+- Custom themes support
+
+Hash-based detection (`tree_hash` and `content_hash`) quickly identifies changed content without comparing entire trees.
+
+See prd.md:136-154 for complete Diffs.com API references.
+</Accordion>
+
+## Merging Changes
+
+### Merge Process
+
+Merge is triggered via API and runs as a background job:
+
+```python
+merge_change_request(name)  # Enqueues job
+```
+
+<Steps>
+  <Step title="Pre-Merge Checks">
+    - Verify CR status is Approved
+    - Check user has merge permissions
+    - Validate head revision integrity
+  </Step>
+  
+  <Step title="3-Way Merge Logic">
+    For each `doc_key`:
+    - Compare base, ours (main), theirs (head)
+    - Detect creates, updates, deletes, moves
+    - Perform field-level merge for metadata
+    - Perform diff3 merge for content
+  </Step>
+  
+  <Step title="Conflict Detection">
+    Create Wiki Merge Conflict records for:
+    - **Content conflicts**: Both sides edited same content
+    - **Meta conflicts**: Incompatible metadata changes
+    - **Tree conflicts**: Conflicting moves/reorders
+  </Step>
+  
+  <Step title="Apply Merge">
+    If no unresolved conflicts:
+    - Create merge revision
+    - Apply changes to Wiki Document tree
+    - Update Wiki Space.main_revision
+    - Rebuild nested set structure (lft/rgt)
+  </Step>
+</Steps>
+
+### Conflict Resolution
+
+When conflicts occur, Wiki Merge Conflict records are created:
+
+**conflict_type**
+- `content`: Text content conflicts
+- `meta`: Metadata field conflicts
+- `tree`: Tree structure conflicts (move/reorder)
+
+**Payloads**
+- `base_payload`: Original state (JSON)
+- `ours_payload`: Main tree changes (JSON)
+- `theirs_payload`: CR changes (JSON)
+
+**Resolution**
+- `resolution`: ours | theirs | manual
+- `resolved_payload`: Final merged state (JSON)
+- `resolved_by`: User who resolved
+- `resolved_at`: Resolution timestamp
+
+**status**
+- `Open`: Awaiting resolution
+- `Resolved`: Conflict resolved
+
+<Warning>
+Merge cannot proceed with unresolved conflicts. All conflicts must be explicitly resolved by choosing "ours", "theirs", or providing a manual resolution payload.
+</Warning>
+
+## Outdated Change Requests
+
+CRs become outdated when:
+- Main revision advances past the CR's base_revision
+- Other CRs are merged while this CR is in progress
+
+### Checking Outdated Status
+
+```python
+check_outdated(name)
+```
+
+Sets `outdated = 1` if base revision doesn't match current main.
+
+### Handling Outdated CRs
+
+Options:
+1. **Continue and merge**: Rely on 3-way merge to handle differences
+2. **Rebase** (future enhancement): Update base to current main
+3. **Archive**: Abandon and create fresh CR
+
+<Note>
+A scheduled background job `mark_outdated_change_requests()` periodically checks and flags outdated CRs.
+</Note>
+
+## Permissions
+
+Change Request permissions by role:
+
+| Role | Create | Edit Own | Edit All | Merge | Archive |
+|------|--------|----------|----------|-------|----------|
+| System Manager | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Wiki Manager | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Wiki Approver | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Wiki User | ✓ | ✓ | - | - | Own |
+| All (if owner) | ✓ | ✓ | - | - | - |
+
+<Note>
+**All edits require CRs**. Even Wiki Managers cannot edit Wiki Documents directly. However, they can merge their own CRs immediately if needed.
+</Note>
+
+## API Reference
+
+### Lifecycle APIs
+
+```python
+# Create
+create_change_request(wiki_space, title, description=None)
+
+# Retrieve
+get_change_request(name)
+list_change_requests(wiki_space, status=None)
+
+# Update
+update_change_request(name, title=None, description=None)
+
+# Review
+request_review(name, reviewers[])
+review_action(name, reviewer, status, comment=None)
+
+# Finalize
+archive_change_request(name)
+```
+
+### Content Edit APIs
+
+```python
+# Tree operations
+get_cr_tree(name)
+create_cr_page(name, parent_key, title, slug, is_group, is_published, content)
+update_cr_page(name, doc_key, fields)
+move_cr_page(name, doc_key, new_parent_key, new_order_index)
+reorder_cr_children(name, parent_key, ordered_doc_keys[])
+delete_cr_page(name, doc_key)
+```
+
+### Diff and Merge APIs
+
+```python
+# Diffing
+diff_change_request(name, scope="summary|page", doc_key=None)
+
+# Merging
+merge_change_request(name)  # Enqueues background job
+
+# Status
+check_outdated(name)
+```
+
+### Background Jobs
+
+```python
+# Job queue operations
+enqueue_merge_change_request(name)
+apply_merge_revision(merge_revision)
+recompute_revision_hashes(revision)
+
+# Scheduled tasks
+mark_outdated_change_requests()  # Periodic
+cleanup_working_snapshots()  # Optional
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Use Descriptive Titles">
+    CR titles should clearly explain the purpose: "Add Docker installation docs" not "Update docs"
+  </Step>
+  
+  <Step title="Keep CRs Focused">
+    Smaller, focused CRs are easier to review and less likely to conflict
+  </Step>
+  
+  <Step title="Review Before Requesting Review">
+    Use the diff viewer to check your own changes before assigning reviewers
+  </Step>
+  
+  <Step title="Resolve Conflicts Promptly">
+    Address merge conflicts as soon as they're detected to avoid blocking
+  </Step>
+  
+  <Step title="Archive Stale CRs">
+    If a CR becomes too outdated or no longer needed, archive it rather than leaving it open
+  </Step>
+</Steps>
+
+## Related Features
+
+- [Wiki Spaces](/features/wiki-spaces) - CRs are scoped to spaces
+- [Wiki Documents](/features/wiki-documents) - CRs modify documents
+- [Collaboration](/features/collaboration) - Work together on CRs

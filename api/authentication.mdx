@@ -1,0 +1,253 @@
+---
+title: Authentication
+description: Authenticate your API requests to Frappe Wiki
+---
+
+## Authentication Methods
+
+Frappe Wiki supports two authentication methods:
+
+1. **API Key Authentication** (Recommended for API access)
+2. **Session-based Authentication** (For web applications)
+
+## API Key Authentication
+
+### Generating API Keys
+
+1. Log in to your Frappe site
+2. Navigate to your user profile
+3. Click on "API Access" section
+4. Generate new API Key and Secret
+5. **Save the secret immediately** - it's only shown once
+
+### Using API Keys
+
+Include the API key in the Authorization header:
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.change_requests.get_my_change_requests \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json"
+```
+
+### Python Example
+
+```python
+import requests
+
+API_KEY = "your_api_key"
+API_SECRET = "your_api_secret"
+BASE_URL = "https://your-site.com"
+
+headers = {
+    "Authorization": f"token {API_KEY}:{API_SECRET}",
+    "Content-Type": "application/json"
+}
+
+response = requests.post(
+    f"{BASE_URL}/api/method/wiki.api.change_requests.get_my_change_requests",
+    headers=headers
+)
+
+data = response.json()
+print(data["message"])
+```
+
+### JavaScript Example
+
+```javascript
+const API_KEY = "your_api_key";
+const API_SECRET = "your_api_secret";
+const BASE_URL = "https://your-site.com";
+
+const headers = {
+  "Authorization": `token ${API_KEY}:${API_SECRET}`,
+  "Content-Type": "application/json"
+};
+
+fetch(`${BASE_URL}/api/method/wiki.api.change_requests.get_my_change_requests`, {
+  method: "POST",
+  headers: headers
+})
+  .then(response => response.json())
+  .then(data => console.log(data.message));
+```
+
+## Session-based Authentication
+
+### Login
+
+Create a session by logging in:
+
+```bash
+curl -X POST https://your-site.com/api/method/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "usr": "user@example.com",
+    "pwd": "password"
+  }'
+```
+
+### Using Session Cookies
+
+After login, the session cookie is automatically included in subsequent requests:
+
+```python
+import requests
+
+session = requests.Session()
+
+# Login
+login_response = session.post(
+    "https://your-site.com/api/method/login",
+    json={
+        "usr": "user@example.com",
+        "pwd": "password"
+    }
+)
+
+# Make authenticated request
+response = session.post(
+    "https://your-site.com/api/method/wiki.api.change_requests.get_my_change_requests"
+)
+
+print(response.json())
+```
+
+## Guest Access
+
+Some endpoints allow guest access without authentication:
+
+- `wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_page_data`
+- `wiki.api.get_translations`
+
+Example:
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.frappe_wiki.doctype.wiki_document.wiki_document.get_page_data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "route": "docs/getting-started"
+  }'
+```
+
+## Getting User Information
+
+Retrieve information about the authenticated user:
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.get_user_info \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json"
+```
+
+**Response:**
+
+```json
+{
+  "message": {
+    "name": "user@example.com",
+    "is_logged_in": true,
+    "first_name": "John",
+    "last_name": "Doe",
+    "full_name": "John Doe",
+    "email": "user@example.com",
+    "user_image": "/files/user.jpg",
+    "roles": [
+      {"role": "Wiki User"},
+      {"role": "System User"}
+    ],
+    "brand_image": "/files/logo.png",
+    "language": "en"
+  }
+}
+```
+
+## Error Handling
+
+### Authentication Errors
+
+**Invalid Credentials:**
+```json
+{
+  "exc_type": "AuthenticationError",
+  "exception": "Incorrect password"
+}
+```
+
+**Missing API Key:**
+```json
+{
+  "exc_type": "PermissionError",
+  "exception": "Not permitted"
+}
+```
+
+### Permission Errors
+
+```json
+{
+  "exc_type": "PermissionError",
+  "exception": "frappe.exceptions.PermissionError: You do not have permission"
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Secure API Key Storage">
+    - Never commit API keys to version control
+    - Use environment variables or secret management services
+    - Rotate API keys regularly
+    - Use separate keys for different applications
+  </Accordion>
+
+  <Accordion title="Error Handling">
+    - Always check response status codes
+    - Parse error messages from `_server_messages` field
+    - Implement retry logic with exponential backoff
+    - Log authentication failures for security monitoring
+  </Accordion>
+
+  <Accordion title="API Key vs Session">
+    **Use API Keys for:**
+    - Server-to-server communication
+    - Long-running integrations
+    - Automated scripts and cron jobs
+
+    **Use Sessions for:**
+    - Web applications
+    - Short-lived operations
+    - User-initiated actions
+  </Accordion>
+</AccordionGroup>
+
+## Security Considerations
+
+<Warning>
+  **Protect Your Credentials**
+  
+  - API secrets are shown only once during generation
+  - Store credentials securely using environment variables
+  - Never expose API keys in client-side code
+  - Use HTTPS for all API requests
+</Warning>
+
+## Rate Limiting
+
+Frappe sites may implement rate limiting:
+
+- Typically 100-1000 requests per hour per user
+- Limits vary by site configuration
+- Check `X-RateLimit-*` headers in responses (if configured)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Change Requests API" icon="code-pull-request" href="/api/change-requests">
+    Learn about change request endpoints
+  </Card>
+  <Card title="Wiki Spaces API" icon="folder-tree" href="/api/wiki-spaces">
+    Access wiki space structure
+  </Card>
+</CardGroup>

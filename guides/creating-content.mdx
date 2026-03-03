@@ -1,0 +1,305 @@
+---
+title: Creating and Editing Content
+description: Learn how to create and edit wiki pages with the powerful markdown editor
+---
+
+Frappe Wiki provides a rich markdown-based editor for creating and editing your documentation content. This guide covers everything from creating your first page to using advanced formatting features.
+
+## Creating a New Page
+
+There are several ways to create a new page in your wiki:
+
+<Steps>
+  <Step title="From the Sidebar">
+    Navigate to your wiki space and hover over a group (folder) in the sidebar. Click the three-dot menu and select **Add Page**.
+  </Step>
+  <Step title="From Empty Groups">
+    If you're viewing an empty group, you'll see quick actions at the bottom of the tree. Click **Add Page** to create a new page in that group.
+  </Step>
+  <Step title="Set Page Details">
+    In the dialog that appears:
+    - Enter a **Title** for your page
+    - The **Route** (URL path) is automatically generated from your title
+    - Choose whether to publish the page immediately
+  </Step>
+</Steps>
+
+<Note>
+New pages are created as drafts in a change request. You'll need to merge your changes to publish them to the live wiki.
+</Note>
+
+## Understanding the Editor Interface
+
+The wiki editor is divided into three main areas:
+
+### Header Bar
+- **Page Title**: Click to edit the page title inline
+- **Route**: View and edit the URL path by clicking the route below the title
+- **Status Badges**: See if the page is a draft, group, or published
+- **Save Draft**: Manually save your changes (auto-save runs every 10 seconds)
+- **Menu**: Access page settings and other options
+
+### Toolbar
+The formatting toolbar provides quick access to common formatting options:
+
+- **Headings dropdown**: Choose heading levels 1-6 or paragraph text
+- **Text formatting**: Bold, italic, strikethrough, and inline code
+- **Lists**: Bullet lists, numbered lists, and task lists with checkboxes
+- **Block elements**: Blockquotes, code blocks, and horizontal rules
+- **Tables**: Insert and edit tables with resizable columns
+- **Links and Images**: Add hyperlinks and upload images
+- **Video**: Upload video files directly to your content
+- **Undo/Redo**: Navigate through your edit history
+
+### Editor Area
+The main editing area where you write your content. The editor shows formatted text as you type, providing a WYSIWYG-like experience while maintaining markdown compatibility.
+
+## Writing Content
+
+### Basic Formatting
+
+Use the toolbar buttons or keyboard shortcuts for common formatting:
+
+- **Bold**: Cmd/Ctrl + B or click the bold button
+- **Italic**: Cmd/Ctrl + I or click the italic button
+- **Inline code**: Click the code button or wrap text in backticks
+- **Links**: Cmd/Ctrl + K to open the link dialog
+
+### Headings
+
+Create a clear document hierarchy using headings:
+
+<CodeGroup>
+```markdown Headings
+# Heading 1
+## Heading 2
+### Heading 3
+```
+</CodeGroup>
+
+Use the headings dropdown in the toolbar or type `/` followed by "heading" to insert headings via slash commands.
+
+### Lists
+
+Create three types of lists:
+
+**Bullet Lists**
+- Start typing and click the bullet list button
+- Press Enter to create a new item
+- Press Tab to indent, Shift+Tab to outdent
+
+**Numbered Lists**
+- Click the numbered list button
+- Numbering updates automatically
+- Supports nested numbered lists
+
+**Task Lists**
+- Click the task list button to create checkboxes
+- Check and uncheck items in the editor
+- Perfect for tracking progress or creating checklists
+
+### Code Blocks
+
+Add code blocks with syntax highlighting:
+
+<Steps>
+  <Step title="Insert Code Block">
+    Click the code block button in the toolbar or type `/code` and select **Code Block**.
+  </Step>
+  <Step title="Select Language">
+    Click the language dropdown at the top-right of the code block to enable syntax highlighting for your programming language.
+  </Step>
+  <Step title="Write Code">
+    Type or paste your code. The editor provides syntax highlighting for over 30 programming languages.
+  </Step>
+</Steps>
+
+### Tables
+
+Create and edit tables visually:
+
+<Steps>
+  <Step title="Insert Table">
+    Click the **Table** dropdown in the toolbar and select your desired size, or type `/table` to insert a 3x3 table.
+  </Step>
+  <Step title="Edit Content">
+    Click any cell to edit its content. Use Tab to move to the next cell.
+  </Step>
+  <Step title="Modify Structure">
+    Right-click on any cell to:
+    - Add or delete rows and columns
+    - Merge cells
+    - Clear cell content
+  </Step>
+  <Step title="Resize Columns">
+    Hover over column borders to see resize handles. Drag to adjust column width.
+  </Step>
+</Steps>
+
+### Images and Videos
+
+**Adding Images**
+
+<Tabs>
+  <Tab title="Toolbar Button">
+    1. Click the image button in the toolbar
+    2. Select an image file from your computer
+    3. The image is uploaded and inserted automatically
+  </Tab>
+  <Tab title="Drag and Drop">
+    Drag an image file from your computer directly into the editor to upload and insert it.
+  </Tab>
+  <Tab title="Paste">
+    Copy an image to your clipboard and paste (Cmd/Ctrl + V) directly into the editor.
+  </Tab>
+  <Tab title="Slash Command">
+    Type `/image` and press Enter to trigger the file picker.
+  </Tab>
+</Tabs>
+
+**Adding Videos**
+
+Click the video button in the toolbar or type `/video` to upload video files. Supported formats include MP4, WebM, and more.
+
+### Callouts
+
+Highlight important information using callout blocks:
+
+<Steps>
+  <Step title="Insert Callout">
+    Type `/` to open the slash commands menu, then choose from:
+    - **Note Callout**: For general information
+    - **Tip Callout**: For helpful suggestions
+    - **Warning Callout**: For cautionary information
+    - **Danger Callout**: For critical warnings
+  </Step>
+  <Step title="Add Content">
+    Click in the callout to add your message. You can use formatting, links, and other content within callouts.
+  </Step>
+  <Step title="Set Title (Optional)">
+    Some callout types support custom titles. Edit the title field if available.
+  </Step>
+</Steps>
+
+## Using Slash Commands
+
+Slash commands provide a fast way to insert any content type:
+
+<Steps>
+  <Step title="Trigger the Menu">
+    Type `/` anywhere in the editor to open the slash commands menu.
+  </Step>
+  <Step title="Search or Select">
+    - Browse available commands with arrow keys
+    - Type to filter commands (e.g., `/table` to find table options)
+    - Press Enter to insert the selected command
+  </Step>
+</Steps>
+
+Available slash commands:
+- Heading 1, 2, 3
+- Bullet List, Numbered List, Task List
+- Code Block, Blockquote, Horizontal Rule
+- Table, Image, Video
+- Note, Tip, Warning, and Danger callouts
+
+## Saving Your Work
+
+Frappe Wiki automatically saves your changes:
+
+- **Auto-save**: Changes are saved automatically every 10 seconds after you stop typing
+- **Manual Save**: Click **Save Draft** or press Cmd/Ctrl + S to save immediately
+- **Draft Status**: All edits are saved as drafts until you publish them through the review workflow
+
+<Warning>
+Changes are saved to your draft change request, not directly to the live wiki. You need to submit and merge your change request to publish content.
+</Warning>
+
+## Editing Existing Pages
+
+To edit an existing page:
+
+<Steps>
+  <Step title="Navigate to the Page">
+    Click on the page in the sidebar to open it.
+  </Step>
+  <Step title="Start Editing">
+    The page opens in edit mode within your draft change request.
+  </Step>
+  <Step title="Make Changes">
+    Edit the content using the full editor capabilities.
+  </Step>
+  <Step title="Save">
+    Changes are auto-saved. Click **Save Draft** to save immediately.
+  </Step>
+</Steps>
+
+## Editing Page Properties
+
+Modify page metadata through the page settings:
+
+<Steps>
+  <Step title="Open Settings">
+    Click the three-dot menu in the page header and select **Edit Route** or click the route below the title.
+  </Step>
+  <Step title="Modify Properties">
+    Update:
+    - **Title**: The display name of the page
+    - **Route**: The URL path (e.g., `docs/getting-started`)
+    - **Slug**: The URL-friendly version of the title
+  </Step>
+  <Step title="Save Changes">
+    Click **Save** to apply the changes to your draft.
+  </Step>
+</Steps>
+
+## Creating Groups
+
+Groups organize related pages in a hierarchy:
+
+<Steps>
+  <Step title="Create Group">
+    Right-click a parent group in the sidebar and select **Add Group**.
+  </Step>
+  <Step title="Name the Group">
+    Enter a name for the group. Groups don't have content—they only contain other pages and groups.
+  </Step>
+  <Step title="Add Pages">
+    Create pages inside the group using **Add Page** or drag existing pages into the group.
+  </Step>
+</Steps>
+
+<Note>
+Groups appear as folders in the sidebar and help create a hierarchical structure for your documentation.
+</Note>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Descriptive Titles">
+    Choose clear, descriptive titles that tell users what they'll find on the page. Titles are used in navigation and search results.
+  </Accordion>
+  <Accordion title="Structure with Headings">
+    Use heading levels to create a clear hierarchy. Start with H2 (##) for main sections and use H3-H4 for subsections.
+  </Accordion>
+  <Accordion title="Keep URLs Clean">
+    Edit routes to create clean, memorable URLs. Use hyphens instead of underscores, and keep them short.
+  </Accordion>
+  <Accordion title="Add Context with Callouts">
+    Use callouts to highlight important information that readers shouldn't miss.
+  </Accordion>
+  <Accordion title="Save Frequently">
+    While auto-save is enabled, use Cmd/Ctrl + S to save after significant changes.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Organizing Pages" icon="folder-tree" href="/guides/organizing-pages">
+    Learn how to structure your documentation with groups and hierarchies
+  </Card>
+  <Card title="Markdown Support" icon="markdown" href="/guides/markdown-support">
+    Explore all markdown features and formatting options
+  </Card>
+</CardGroup>

@@ -1,0 +1,460 @@
+---
+title: Publishing Pages
+description: Control page visibility, manage publication status, and understand the publishing workflow
+---
+
+Publishing in Frappe Wiki controls which content is visible to end users. This guide covers publication settings, visibility control, and best practices for managing published content.
+
+## Understanding Publication Status
+
+### Published vs. Unpublished
+
+Every page has a publication status:
+
+<Tabs>
+  <Tab title="Published Pages">
+    **Characteristics:**
+    - Visible to all users with access to the wiki
+    - Appear in navigation and search
+    - Accessible via direct URL
+    - Included in sitemap for SEO
+
+    **Use for:** Complete, reviewed content ready for users
+  </Tab>
+  <Tab title="Unpublished Pages">
+    **Characteristics:**
+    - Only visible to editors and wiki managers
+    - Don't appear in public navigation
+    - Not indexed by search engines
+    - Still accessible to team members
+
+    **Use for:** Work in progress, incomplete content, or internal documentation
+  </Tab>
+</Tabs>
+
+### How Publishing Works
+
+Publication is managed through two levels:
+
+1. **Page-Level Publishing**: Individual pages can be published or unpublished
+2. **Space-Level Publishing**: Entire wiki spaces can be public or private
+
+<Info>
+Both the space and the page must be published for content to be visible to end users.
+</Info>
+
+## Setting Page Publication Status
+
+### For New Pages
+
+When creating a page:
+
+<Steps>
+  <Step title="Create Page Dialog">
+    In the new page dialog, look for the **Published** checkbox.
+  </Step>
+  <Step title="Set Initial Status">
+    - ✅ **Checked**: Page will be published after merge (default)
+    - ⬜ **Unchecked**: Page stays unpublished after merge
+  </Step>
+  <Step title="Save">
+    Create the page. The status is saved in your draft.
+  </Step>
+</Steps>
+
+### For Existing Pages
+
+Toggle publication status:
+
+<Steps>
+  <Step title="Open Page Menu">
+    Right-click the page in the sidebar.
+  </Step>
+  <Step title="Toggle Status">
+    Select **Publish** or **Unpublish** from the menu.
+  </Step>
+  <Step title="Save Draft">
+    The change is saved in your draft change request.
+  </Step>
+  <Step title="Merge to Apply">
+    Merge your change request to apply the publication status change.
+  </Step>
+</Steps>
+
+<Note>
+Publication status changes go through the same review workflow as content edits. Changes take effect only after merging.
+</Note>
+
+## Visual Indicators
+
+### In the Sidebar
+
+Pages show their status with visual cues:
+
+- **Normal text color**: Published page
+- **Dimmed text**: Unpublished page
+- **Orange "Not Published" badge**: Unpublished page indicator
+
+### In Drafts
+
+When working in a change request:
+- Pages being published show no special indicator
+- Pages being unpublished show the "Not Published" badge
+
+## Group Publication Behavior
+
+### How Groups are Published
+
+Groups (folders) have different publication rules:
+
+- **Groups don't have publish status**: They're automatically visible if they contain published pages
+- **Empty groups**: Hidden from public view
+- **Groups with only unpublished pages**: Hidden from public view
+- **Groups with at least one published page**: Visible in navigation
+
+### Navigating to Groups
+
+When users click a published group:
+- They're redirected to the first published page within that group
+- If no published pages exist, the group appears empty (but shouldn't be visible)
+
+## Space-Level Publishing
+
+### Wiki Space Publication
+
+Control entire space visibility:
+
+<Steps>
+  <Step title="Open Space Settings">
+    Navigate to the wiki space list and click the space's settings icon.
+  </Step>
+  <Step title="Toggle Space Publishing">
+    Find the **Is Published** checkbox:
+    - ✅ **Published**: Space is public (if server allows)
+    - ⬜ **Unpublished**: Space is private to team members
+  </Step>
+  <Step title="Save">
+    Click **Save** to apply the change immediately.
+  </Step>
+</Steps>
+
+<Warning>
+Unpublishing a space makes all its pages inaccessible to public users, regardless of individual page publication status.
+</Warning>
+
+### Private Pages Within Public Spaces
+
+For granular access control:
+
+1. Keep the space published
+2. Unpublish individual pages that should be internal
+3. Use groups to organize public vs. private content
+
+## Publication Workflow
+
+### Standard Publishing Flow
+
+<Steps>
+  <Step title="Create Content">
+    Write pages in your draft change request.
+  </Step>
+  <Step title="Set Publication Status">
+    Mark pages as published or unpublished based on completion.
+  </Step>
+  <Step title="Review">
+    Submit the change request for review.
+  </Step>
+  <Step title="Merge">
+    After approval, merge the change request.
+  </Step>
+  <Step title="Content Goes Live">
+    Published pages immediately appear in the live wiki.
+  </Step>
+</Steps>
+
+### Unpublishing Existing Content
+
+<Steps>
+  <Step title="Create Draft">
+    Start editing the wiki (creates a draft automatically).
+  </Step>
+  <Step title="Unpublish Pages">
+    Right-click pages and select **Unpublish**.
+  </Step>
+  <Step title="Request Review">
+    Submit for review if required.
+  </Step>
+  <Step title="Merge">
+    Merge the change request to unpublish the pages.
+  </Step>
+  <Step title="Pages Hidden">
+    Unpublished pages disappear from public view immediately.
+  </Step>
+</Steps>
+
+<Info>
+Unpublished pages remain in your wiki's structure and can be republished anytime.
+</Info>
+
+## Managing Drafts and Publication
+
+### Draft Content Visibility
+
+While working in a draft:
+- All pages are visible in the editor (regardless of publish status)
+- Publication status is indicated by badges
+- Preview reflects what will be published after merge
+
+### Bulk Publication
+
+To publish multiple pages at once:
+
+1. Open your draft
+2. Navigate through pages in the sidebar
+3. Right-click and publish each one
+4. Merge to apply all changes together
+
+<Note>
+There's no "Publish All" button. Each page must be published individually to ensure intentional publication decisions.
+</Note>
+
+## SEO and Discoverability
+
+### Search Engine Visibility
+
+Published pages:
+- Are indexed by search engines (if wiki is public)
+- Include meta tags for SEO
+- Generate sitemap entries
+- Show in search results
+
+Unpublished pages:
+- Have `noindex` meta tags
+- Are excluded from sitemaps
+- Won't appear in search results
+- Redirect non-editors away
+
+### Internal Search
+
+**For Editors:**
+- Both published and unpublished pages appear in wiki search
+- Status badges show publication state
+
+**For Users:**
+- Only published pages appear in search results
+- Unpublished pages are filtered out
+
+## Access Control
+
+### Public Access
+
+For publicly accessible wikis:
+
+<Tabs>
+  <Tab title="Guest Users">
+    - Can view published pages
+    - Cannot view unpublished pages
+    - Cannot access edit functionality
+    - Cannot see drafts or change requests
+  </Tab>
+  <Tab title="Logged-In Users">
+    - Can view all published pages
+    - May see unpublished pages (if granted permission)
+    - May have edit access (role-dependent)
+    - Can view their own drafts
+  </Tab>
+</Tabs>
+
+### Private Pages
+
+Use the **Private** flag for sensitive content:
+
+<Steps>
+  <Step title="Edit Page Settings">
+    Open the page and click the route to access settings.
+  </Step>
+  <Step title="Enable Private Flag">
+    Check the **Private** checkbox.
+  </Step>
+  <Step title="Save and Merge">
+    Save the settings and merge your change request.
+  </Step>
+</Steps>
+
+**Private pages:**
+- Require users to be logged in
+- Don't appear for guest users
+- May require specific roles for access
+- Useful for internal documentation
+
+## Common Publishing Patterns
+
+### Progressive Publication
+
+```
+1. Create pages as unpublished
+2. Work on multiple pages in drafts
+3. Publish completed pages incrementally
+4. Keep WIP pages unpublished until ready
+```
+
+**Benefits:**
+- Allows work on large documentation sets
+- Publishes content as it's completed
+- Avoids overwhelming users with incomplete info
+
+### Staged Publishing
+
+```
+1. Create entire section as unpublished
+2. Review and finalize all pages
+3. Publish entire section at once
+4. Launch with complete, cohesive content
+```
+
+**Benefits:**
+- Ensures complete coverage before launch
+- Provides consistent user experience
+- Good for feature launches or major updates
+
+### Internal + External Content
+
+```
+Root
+├── Public Docs (published)
+│   ├── User Guide (published)
+│   └── Tutorials (published)
+└── Internal Docs (unpublished)
+    ├── Architecture Notes (unpublished)
+    └── Team Processes (unpublished)
+```
+
+**Benefits:**
+- Single wiki for all documentation
+- Clear separation between public and internal
+- Easy to maintain and navigate
+
+## Publication Best Practices
+
+<AccordionGroup>
+  <Accordion title="Default to Published">
+    Create pages as published unless there's a specific reason not to. Users expect documentation to be visible.
+  </Accordion>
+  <Accordion title="Review Before Publishing">
+    Always review content before publishing, especially for public wikis. Check for accuracy, completeness, and formatting.
+  </Accordion>
+  <Accordion title="Use Unpublished for WIP">
+    Mark incomplete pages as unpublished to avoid confusing users with partial information.
+  </Accordion>
+  <Accordion title="Publish Complete Sections">
+    When adding new sections, publish all related pages together for a complete user experience.
+  </Accordion>
+  <Accordion title="Update Publication Status Regularly">
+    Periodically review unpublished pages and publish them when complete, or delete if no longer needed.
+  </Accordion>
+  <Accordion title="Document Publication Decisions">
+    Use change request descriptions to explain why pages are published or unpublished.
+  </Accordion>
+  <Accordion title="Test Before Publishing">
+    Preview pages in the draft view to ensure they look correct before making them public.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting Publication Issues
+
+### Page Not Appearing Publicly
+
+<Steps>
+  <Step title="Check Page Status">
+    Verify the page is marked as published (no "Not Published" badge).
+  </Step>
+  <Step title="Check Space Status">
+    Ensure the wiki space itself is published.
+  </Step>
+  <Step title="Check Private Flag">
+    If the page is private, you must be logged in to view it.
+  </Step>
+  <Step title="Verify Merge">
+    Confirm the change request containing the publication change was merged.
+  </Step>
+  <Step title="Check Parent Groups">
+    Ensure the page is in a group that contains other published pages.
+  </Step>
+</Steps>
+
+### Page Appearing When It Shouldn't
+
+<Steps>
+  <Step title="Verify Unpublish Action">
+    Check that you unpublished the page (not just marked it as draft).
+  </Step>
+  <Step title="Confirm Merge">
+    Ensure the change request with the unpublish action was merged.
+  </Step>
+  <Step title="Check Caching">
+    Clear your browser cache and refresh the page.
+  </Step>
+  <Step title="Verify Space Settings">
+    Confirm the space publication settings match your intent.
+  </Step>
+</Steps>
+
+## Publication and Change Requests
+
+### Publication in CRs
+
+Publication status changes work like content edits:
+
+- Changes are saved in your draft
+- Must go through review (if required)
+- Take effect after merge
+- Can be reverted in a new CR
+
+### Reviewing Publication Changes
+
+When reviewing a CR with publication changes:
+
+<Steps>
+  <Step title="Check Change Summary">
+    Look for pages being published or unpublished in the changes list.
+  </Step>
+  <Step title="Verify Readiness">
+    For pages being published, verify content is complete and accurate.
+  </Step>
+  <Step title="Check Consistency">
+    Ensure publication status is consistent with the page's completion level.
+  </Step>
+  <Step title="Approve or Request Changes">
+    Approve if publication decisions are appropriate, or request changes if pages aren't ready.
+  </Step>
+</Steps>
+
+## Monitoring Published Content
+
+### Published Page Count
+
+Track how much content is public:
+
+1. View the wiki sidebar
+2. Published pages appear in normal text
+3. Count visible pages without "Not Published" badges
+
+### Unpublished Content Report
+
+Periodically review unpublished pages:
+
+1. Create a draft
+2. Navigate through the tree
+3. Note pages with "Not Published" badges
+4. Decide to publish, update, or delete each one
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Review Workflow" icon="code-pull-request" href="/guides/review-workflow">
+    Learn how publication changes go through the review process
+  </Card>
+  <Card title="Creating Content" icon="pen-to-square" href="/guides/creating-content">
+    Return to the content creation guide
+  </Card>
+</CardGroup>

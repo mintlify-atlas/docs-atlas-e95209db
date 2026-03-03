@@ -1,0 +1,305 @@
+---
+title: Self-Hosting Installation
+description: Complete guide to installing Frappe Wiki on your own server
+---
+
+## Overview
+
+This guide walks you through installing Frappe Wiki on your own server using Bench, the CLI tool for managing Frappe applications.
+
+<Info>
+Before you begin, ensure your system meets all [system requirements](/deployment/requirements).
+</Info>
+
+## Prerequisites
+
+- A server running Ubuntu 20.04 LTS or newer (or compatible Linux distribution)
+- Root or sudo access to the server
+- Basic familiarity with command-line operations
+
+## Installation Methods
+
+### Development Setup
+
+For local development, you'll set up Frappe Wiki on your development machine.
+
+### Production Setup
+
+For production deployments, additional configuration for Nginx, SSL, and process management is required.
+
+## Step 1: Install Bench
+
+<Steps>
+
+<Step title="Install Bench CLI">
+
+Follow the official [Frappe Framework Installation Guide](https://frappeframework.com/docs/user/en/installation) to install Bench on your system.
+
+The installation will set up:
+- Python environment
+- MariaDB/PostgreSQL database
+- Redis
+- Node.js and Yarn
+- Nginx (for production)
+- Supervisor (for production)
+
+</Step>
+
+<Step title="Verify Installation">
+
+After installation, verify Bench is working:
+
+```bash
+bench --version
+```
+
+</Step>
+
+</Steps>
+
+## Step 2: Start Bench
+
+<Steps>
+
+<Step title="Navigate to Bench Directory">
+
+Change to your Frappe Bench directory (typically `frappe-bench`):
+
+```bash
+cd frappe-bench
+```
+
+</Step>
+
+<Step title="Start the Bench Server">
+
+Start all services (web server, background workers, and Redis):
+
+```bash
+bench start
+```
+
+This command starts the development server. Keep this terminal window open.
+
+</Step>
+
+</Steps>
+
+## Step 3: Install Frappe Wiki
+
+<Steps>
+
+<Step title="Open New Terminal">
+
+Open a new terminal window and navigate to your `frappe-bench` directory:
+
+```bash
+cd frappe-bench
+```
+
+</Step>
+
+<Step title="Get the Wiki App">
+
+Download and install the Frappe Wiki app:
+
+```bash
+bench get-app https://github.com/frappe/wiki
+```
+
+This command clones the repository and installs dependencies.
+
+</Step>
+
+<Step title="Install on Site">
+
+Install Frappe Wiki on your site:
+
+```bash
+bench --site sitename install-app wiki
+```
+
+Replace `sitename` with your actual site name (e.g., `site1.local`).
+
+</Step>
+
+</Steps>
+
+## Step 4: Access Your Wiki
+
+Once installation is complete, access your wiki:
+
+- **Development**: `http://localhost:8000`
+- **Production**: Your configured domain
+
+Log in with the Administrator credentials you set up during Bench installation.
+
+## Post-Installation Configuration
+
+### Create a New Site (Optional)
+
+If you need to create a new site:
+
+```bash
+bench new-site mysite.local
+```
+
+Then install Wiki on the new site:
+
+```bash
+bench --site mysite.local install-app wiki
+```
+
+### Set Up Production
+
+For production deployments, run:
+
+```bash
+# Generate production configuration
+sudo bench setup production [username]
+
+# Enable SSL (if using Let's Encrypt)
+sudo bench setup lets-encrypt [sitename]
+```
+
+## Common Bench Commands
+
+Here are essential Bench commands for managing your Wiki installation:
+
+### Starting and Stopping
+
+```bash
+# Start all services (development)
+bench start
+
+# Restart specific services
+bench restart
+
+# Stop services
+Ctrl+C (in the terminal running bench start)
+```
+
+### Updates and Maintenance
+
+```bash
+# Update all apps
+bench update
+
+# Update specific app
+bench update --app wiki
+
+# Migrate database after updates
+bench --site sitename migrate
+
+# Clear cache
+bench --site sitename clear-cache
+```
+
+### Backup and Restore
+
+```bash
+# Create backup
+bench --site sitename backup
+
+# Restore from backup
+bench --site sitename restore [backup-file]
+```
+
+### Site Management
+
+```bash
+# List all sites
+bench --site all list
+
+# Set current site
+bench use sitename
+
+# Drop site (careful!)
+bench drop-site sitename
+```
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 8000 is already in use, you can specify a different port:
+
+```bash
+bench serve --port 8001
+```
+
+### Database Connection Issues
+
+Verify MariaDB/PostgreSQL is running:
+
+```bash
+sudo systemctl status mariadb
+# or
+sudo systemctl status postgresql
+```
+
+### Redis Connection Issues
+
+Verify Redis is running:
+
+```bash
+sudo systemctl status redis
+```
+
+### Permission Issues
+
+Ensure proper ownership of the bench directory:
+
+```bash
+sudo chown -R $USER:$USER ~/frappe-bench
+```
+
+## Performance Optimization
+
+### Enable Redis Caching
+
+Redis is automatically configured for caching and background jobs.
+
+### Configure RedisSearch
+
+Frappe Wiki uses RedisSearch for full-text search. Ensure RedisSearch module is installed:
+
+```bash
+redis-cli MODULE LIST
+```
+
+If not present, install the RedisSearch module following the [official documentation](https://github.com/RediSearch/RediSearch).
+
+### Database Optimization
+
+Regularly optimize your database for better performance:
+
+```bash
+bench --site sitename mariadb
+# Then run: OPTIMIZE TABLE `tabWiki Page`;
+```
+
+## Security Best Practices
+
+1. **Use SSL/TLS**: Always enable HTTPS for production deployments
+2. **Regular Updates**: Keep Frappe Framework and Wiki app updated
+3. **Strong Passwords**: Use strong passwords for database and admin accounts
+4. **Firewall**: Configure firewall to only allow necessary ports
+5. **Backups**: Set up automated daily backups
+
+## Next Steps
+
+After successful installation:
+
+- Configure your first wiki in [Wiki Settings](/configuration/wiki-settings)
+- Learn about [creating wiki pages](/guides/creating-pages)
+- Set up [user permissions](/configuration/permissions)
+- Explore [customization options](/customization/overview)
+
+## Getting Help
+
+If you encounter issues:
+
+- [Telegram Community](https://t.me/frappewiki)
+- [Discussion Forum](https://discuss.frappe.io/c/wiki/72)
+- [GitHub Issues](https://github.com/frappe/wiki/issues)

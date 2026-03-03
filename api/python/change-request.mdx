@@ -1,0 +1,584 @@
+---
+title: WikiChangeRequest
+description: API reference for the WikiChangeRequest class
+---
+
+The `WikiChangeRequest` class represents a change request (CR) for wiki documents. It provides a Git-like workflow for proposing, reviewing, and merging changes.
+
+## Class Definition
+
+```python
+from frappe.model.document import Document
+
+class WikiChangeRequest(Document):
+    pass
+```
+
+**Location:** `wiki/frappe_wiki/doctype/wiki_change_request/wiki_change_request.py`
+
+## DocType Fields
+
+<ParamField path="title" type="Data" required>
+  Title of the change request
+</ParamField>
+
+<ParamField path="wiki_space" type="Link" required>
+  Link to the Wiki Space this CR belongs to
+</ParamField>
+
+<ParamField path="status" type="Select" required default="Draft">
+  Current status of the CR. Options: Draft, Open, In Review, Changes Requested, Approved, Merged, Archived
+</ParamField>
+
+<ParamField path="description" type="Small Text">
+  Description of the changes in this CR
+</ParamField>
+
+<ParamField path="base_revision" type="Link" required>
+  The base Wiki Revision this CR is based on
+</ParamField>
+
+<ParamField path="head_revision" type="Link" required>
+  The head Wiki Revision containing the CR's changes
+</ParamField>
+
+<ParamField path="merge_revision" type="Link">
+  The merge Wiki Revision created when CR is merged (read-only)
+</ParamField>
+
+<ParamField path="outdated" type="Check" default="0">
+  Whether the CR is outdated (base_revision != current main_revision)
+</ParamField>
+
+<ParamField path="merged_by" type="Link">
+  User who merged the CR (read-only)
+</ParamField>
+
+<ParamField path="merged_at" type="Datetime">
+  Timestamp when CR was merged (read-only)
+</ParamField>
+
+<ParamField path="archived_at" type="Datetime">
+  Timestamp when CR was archived (read-only)
+</ParamField>
+
+<ParamField path="reviewers" type="Table">
+  Table of Wiki CR Reviewer child records
+</ParamField>
+
+<ParamField path="participants" type="Table">
+  Table of Wiki CR Participant child records
+</ParamField>
+
+## Module Functions
+
+### get_change_request(name)
+
+Returns a change request by name.
+
+```python
+@frappe.whitelist()
+def get_change_request(name: str) -> dict[str, Any]
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+**Returns:** `dict` - Change request data
+
+**Example:**
+```python
+import frappe
+cr = frappe.call("wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_change_request", name="CR-001")
+print(cr['title'])
+```
+
+**Source:** `wiki_change_request.py:61`
+
+### get_or_create_draft_change_request(wiki_space, title)
+
+Returns an existing draft CR or creates a new one.
+
+```python
+@frappe.whitelist()
+def get_or_create_draft_change_request(wiki_space: str, title: str | None = None) -> dict[str, Any]
+```
+
+<ParamField path="wiki_space" type="str" required>
+  Name of the Wiki Space
+</ParamField>
+
+<ParamField path="title" type="str">
+  Title for the new CR if one needs to be created
+</ParamField>
+
+**Returns:** `dict` - Change request data
+
+**Example:**
+```python
+import frappe
+cr = frappe.call(
+    "wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_or_create_draft_change_request",
+    wiki_space="SPACE-001",
+    title="Update documentation"
+)
+```
+
+**Source:** `wiki_change_request.py:111`
+
+### create_change_request(wiki_space, title, description)
+
+Creates a new change request.
+
+```python
+@frappe.whitelist()
+def create_change_request(wiki_space: str, title: str, description: str | None = None) -> Document
+```
+
+<ParamField path="wiki_space" type="str" required>
+  Name of the Wiki Space
+</ParamField>
+
+<ParamField path="title" type="str" required>
+  Title of the change request
+</ParamField>
+
+<ParamField path="description" type="str">
+  Description of the changes
+</ParamField>
+
+**Returns:** `Document` - The created WikiChangeRequest document
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request import create_change_request
+
+cr = create_change_request(
+    wiki_space="SPACE-001",
+    title="Add new features section",
+    description="Adding documentation for new features"
+)
+```
+
+**Source:** `wiki_change_request.py:361`
+
+### list_change_requests(wiki_space, status)
+
+Lists change requests for a wiki space.
+
+```python
+@frappe.whitelist()
+def list_change_requests(wiki_space: str, status: str | None = None) -> list[dict[str, Any]]
+```
+
+<ParamField path="wiki_space" type="str" required>
+  Name of the Wiki Space
+</ParamField>
+
+<ParamField path="status" type="str">
+  Filter by status (optional)
+</ParamField>
+
+**Returns:** `list[dict]` - List of change request data
+
+**Example:**
+```python
+import frappe
+
+# Get all open CRs
+open_crs = frappe.call(
+    "wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.list_change_requests",
+    wiki_space="SPACE-001",
+    status="Open"
+)
+
+for cr in open_crs:
+    print(f"{cr['title']} - {cr['status']}")
+```
+
+**Source:** `wiki_change_request.py:171`
+
+### update_change_request(name, title, description)
+
+Updates a change request's metadata.
+
+```python
+@frappe.whitelist()
+def update_change_request(name: str, title: str | None = None, description: str | None = None) -> None
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="title" type="str">
+  New title (optional)
+</ParamField>
+
+<ParamField path="description" type="str">
+  New description (optional)
+</ParamField>
+
+**Source:** `wiki_change_request.py:199`
+
+### archive_change_request(name)
+
+Archives a change request.
+
+```python
+@frappe.whitelist()
+def archive_change_request(name: str) -> None
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+**Example:**
+```python
+import frappe
+frappe.call(
+    "wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.archive_change_request",
+    name="CR-001"
+)
+```
+
+**Source:** `wiki_change_request.py:210`
+
+## Page Management Functions
+
+### get_cr_tree(name)
+
+Returns the document tree for a change request.
+
+```python
+@frappe.whitelist()
+def get_cr_tree(name: str) -> dict[str, Any]
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+**Returns:** `dict` - Tree structure with `children` and `root_group` keys
+
+**Source:** `wiki_change_request.py:219`
+
+### get_cr_page(name, doc_key)
+
+Returns page data from a change request.
+
+```python
+@frappe.whitelist()
+def get_cr_page(name: str, doc_key: str) -> dict[str, Any]
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="doc_key" type="str" required>
+  The doc_key of the page to retrieve
+</ParamField>
+
+**Returns:** `dict` - Page data including content, metadata, etc.
+
+**Source:** `wiki_change_request.py:300`
+
+### create_cr_page(name, parent_key, title, ...)
+
+Creates a new page in a change request.
+
+```python
+@frappe.whitelist()
+def create_cr_page(
+    name: str,
+    parent_key: str,
+    title: str,
+    slug: str | None = None,
+    is_group: int = 0,
+    is_published: int = 1,
+    content: str | None = None,
+    order_index: int | None = None,
+    is_external_link: int = 0,
+    external_url: str | None = None,
+) -> str
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="parent_key" type="str" required>
+  The doc_key of the parent document
+</ParamField>
+
+<ParamField path="title" type="str" required>
+  Title of the new page
+</ParamField>
+
+<ParamField path="slug" type="str">
+  URL slug (auto-generated if not provided)
+</ParamField>
+
+<ParamField path="is_group" type="int" default="0">
+  Whether this is a group/folder (1) or page (0)
+</ParamField>
+
+<ParamField path="is_published" type="int" default="1">
+  Whether the page is published
+</ParamField>
+
+<ParamField path="content" type="str">
+  Markdown content of the page
+</ParamField>
+
+<ParamField path="order_index" type="int">
+  Order among siblings (auto-incremented if not provided)
+</ParamField>
+
+<ParamField path="is_external_link" type="int" default="0">
+  Whether this links to an external URL
+</ParamField>
+
+<ParamField path="external_url" type="str">
+  External URL if is_external_link is 1
+</ParamField>
+
+**Returns:** `str` - The doc_key of the newly created page
+
+**Example:**
+```python
+import frappe
+
+new_doc_key = frappe.call(
+    "wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.create_cr_page",
+    name="CR-001",
+    parent_key="doc-key-parent",
+    title="New Feature Guide",
+    content="# New Feature\n\nThis guide covers...",
+    is_published=1
+)
+```
+
+**Source:** `wiki_change_request.py:385`
+
+### update_cr_page(name, doc_key, fields)
+
+Updates a page in a change request.
+
+```python
+@frappe.whitelist()
+def update_cr_page(name: str, doc_key: str, fields: dict[str, Any]) -> None
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="doc_key" type="str" required>
+  The doc_key of the page to update
+</ParamField>
+
+<ParamField path="fields" type="dict" required>
+  Dictionary of fields to update (title, slug, content, etc.)
+</ParamField>
+
+**Example:**
+```python
+import frappe
+frappe.call(
+    "wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.update_cr_page",
+    name="CR-001",
+    doc_key="doc-key-123",
+    fields={
+        "title": "Updated Title",
+        "content": "# Updated\n\nNew content..."
+    }
+)
+```
+
+**Source:** `wiki_change_request.py:443`
+
+### delete_cr_page(name, doc_key)
+
+Deletes a page and its children from a change request.
+
+```python
+@frappe.whitelist()
+def delete_cr_page(name: str, doc_key: str) -> None
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="doc_key" type="str" required>
+  The doc_key of the page to delete
+</ParamField>
+
+**Source:** `wiki_change_request.py:508`
+
+### move_cr_page(name, doc_key, new_parent_key, new_order_index)
+
+Moves a page to a new parent in a change request.
+
+```python
+@frappe.whitelist()
+def move_cr_page(name: str, doc_key: str, new_parent_key: str, new_order_index: int | None = None) -> None
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="doc_key" type="str" required>
+  The doc_key of the page to move
+</ParamField>
+
+<ParamField path="new_parent_key" type="str" required>
+  The doc_key of the new parent
+</ParamField>
+
+<ParamField path="new_order_index" type="int">
+  New position among siblings (optional)
+</ParamField>
+
+**Source:** `wiki_change_request.py:475`
+
+### reorder_cr_children(name, parent_key, ordered_doc_keys)
+
+Reorders children of a parent in a change request.
+
+```python
+@frappe.whitelist()
+def reorder_cr_children(name: str, parent_key: str, ordered_doc_keys: list[str]) -> None
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="parent_key" type="str" required>
+  The doc_key of the parent
+</ParamField>
+
+<ParamField path="ordered_doc_keys" type="list[str]" required>
+  Ordered list of child doc_keys
+</ParamField>
+
+**Source:** `wiki_change_request.py:492`
+
+## Review Functions
+
+### request_review(name, reviewers)
+
+Requests review from specified users.
+
+```python
+@frappe.whitelist()
+def request_review(name: str, reviewers: list[str]) -> None
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="reviewers" type="list[str]" required>
+  List of user emails to request review from
+</ParamField>
+
+**Source:** `wiki_change_request.py:652`
+
+### review_action(name, reviewer, status, comment)
+
+Submits a review for a change request.
+
+```python
+@frappe.whitelist()
+def review_action(name: str, reviewer: str, status: str, comment: str | None = None) -> None
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="reviewer" type="str" required>
+  Email of the reviewer
+</ParamField>
+
+<ParamField path="status" type="str" required>
+  Review status: "Approved", "Changes Requested", or "Requested"
+</ParamField>
+
+<ParamField path="comment" type="str">
+  Review comment (optional)
+</ParamField>
+
+**Source:** `wiki_change_request.py:676`
+
+## Merge Functions
+
+### merge_change_request(name)
+
+Merges a change request into the main branch.
+
+```python
+@frappe.whitelist()
+def merge_change_request(name: str) -> str
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+**Returns:** `str` - Name of the merge revision
+
+**Raises:** 
+- `frappe.PermissionError` - If user is not Wiki Manager or Approver
+- `frappe.ValidationError` - If merge conflicts detected
+
+**Source:** `wiki_change_request.py:721`
+
+### diff_change_request(name, scope, doc_key)
+
+Returns the diff for a change request.
+
+```python
+@frappe.whitelist()
+def diff_change_request(name: str, scope: str = "summary", doc_key: str | None = None)
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+<ParamField path="scope" type="str" default="summary">
+  "summary" for all changes or "page" for a specific page
+</ParamField>
+
+<ParamField path="doc_key" type="str">
+  Required if scope="page"
+</ParamField>
+
+**Returns:** List of changes or page diff
+
+**Source:** `wiki_change_request.py:542`
+
+### check_outdated(name)
+
+Checks if a change request is outdated.
+
+```python
+@frappe.whitelist()
+def check_outdated(name: str) -> int
+```
+
+<ParamField path="name" type="str" required>
+  Name of the change request
+</ParamField>
+
+**Returns:** `int` - 1 if outdated, 0 otherwise
+
+**Source:** `wiki_change_request.py:932`

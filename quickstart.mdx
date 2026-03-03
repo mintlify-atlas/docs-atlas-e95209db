@@ -1,80 +1,406 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start Guide
+description: Get started with Frappe Wiki in minutes - from installation to publishing your first page
 ---
 
-## Get started in three steps
-
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+Get up and running with Frappe Wiki quickly. This guide walks you through accessing the application, creating your first wiki space, writing content, and publishing your first page.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+This quickstart assumes you have already installed Frappe Wiki. If not, see the [Installation Guide](/installation) first.
 </Note>
+
+## Getting Started
+
+<Steps>
+  <Step title="Access Frappe Wiki">
+    After installation, log in to your Frappe site:
+    
+    1. Navigate to your site URL (e.g., `http://mysite.local:8000` or your Frappe Cloud URL)
+    2. Log in with your Administrator credentials
+    3. Click the app switcher icon (grid icon) in the top navigation
+    4. Select **Wiki** from the list of installed apps
+    
+    <Note>
+    If you don't see Wiki in the app switcher, verify the app is installed: Run `bench --site mysite.local list-apps` to confirm.
+    </Note>
+  </Step>
+
+  <Step title="Create Your First Wiki Space">
+    Wiki Spaces are top-level containers that organize your documentation. Create your first space:
+    
+    1. From the Frappe desk, search for "**Wiki Space**" in the global search (Ctrl/Cmd + K)
+    2. Click **New Wiki Space**
+    3. Fill in the required fields:
+       - **Space Name**: The display name (e.g., "Product Documentation")
+       - **Route**: URL path where your space will be accessible (e.g., `docs`)
+    4. Configure initial settings:
+       - ✅ **Is Published**: Check to make the space publicly accessible
+       - ✅ **Show in Switcher**: Check to display in the app switcher
+       - ✅ **Enable Feedback Collection**: Enable if you want user feedback on pages
+    5. Click **Save**
+    
+    <Warning>
+    Choose your route carefully. It becomes part of all page URLs and is difficult to change later without breaking links.
+    </Warning>
+    
+    The system automatically creates a root group (container) for your space. You're now ready to add pages!
+  </Step>
+
+  <Step title="Access the Wiki Frontend">
+    Navigate to your wiki space in the user-facing interface:
+    
+    1. Open the app switcher and click **Wiki** (or go to `/wiki` in your browser)
+    2. If you have multiple spaces, select your newly created space
+    3. You'll see an empty navigation sidebar - time to create your first page!
+    
+    <Note>
+    The Wiki frontend is a Vue.js single-page application (SPA) separate from the Frappe desk. This is where content authors write and readers browse.
+    </Note>
+  </Step>
+
+  <Step title="Create Your First Page">
+    Let's create your first wiki page:
+    
+    1. In the Wiki frontend sidebar, hover over the root area
+    2. Click the **three-dot menu** or the **+** button if visible
+    3. Select **Add Page**
+    4. In the dialog that appears:
+       - **Title**: Enter a descriptive title (e.g., "Getting Started")
+       - **Route**: The URL slug is auto-generated from your title (you can customize it)
+       - **Published**: Check if you want the page visible after merging
+    5. Click **Create**
+    
+    <Info>
+    New pages are created in a **draft change request**. This is Frappe Wiki's review workflow - similar to pull requests in Git. All changes are saved to drafts before being published.
+    </Info>
+    
+    Your new page opens in the editor automatically!
+  </Step>
+
+  <Step title="Write Content">
+    Use the rich Markdown editor to write your first content:
+    
+    **Quick Editor Tour:**
+    - **Title Bar**: Click the title at the top to rename your page
+    - **Toolbar**: Use formatting buttons for headings, bold, italic, lists, and more
+    - **Content Area**: Type your content here with live preview
+    - **Auto-save**: Changes save automatically every 10 seconds
+    
+    **Try Adding Some Content:**
+    
+    ```markdown
+    ## Welcome to My Wiki
+    
+    This is my first wiki page created with Frappe Wiki!
+    
+    ### Key Features
+    
+    - **Markdown Support**: Write content using familiar Markdown syntax
+    - **Rich Editor**: WYSIWYG-like editing with a clean interface
+    - **Version Control**: All changes tracked through change requests
+    
+    ### Next Steps
+    
+    - Create more pages
+    - Organize content into groups
+    - Customize your wiki space
+    ```
+    
+    **Using the Toolbar:**
+    - **Headings**: Use the heading dropdown to add H1-H6 headings
+    - **Bold/Italic**: Click buttons or use keyboard shortcuts (Cmd/Ctrl + B, Cmd/Ctrl + I)
+    - **Lists**: Create bullet lists, numbered lists, or task lists with checkboxes
+    - **Links**: Press Cmd/Ctrl + K to add hyperlinks
+    - **Images**: Click the image button to upload files
+    - **Code Blocks**: Add code with syntax highlighting
+    - **Tables**: Insert tables with the table dropdown
+    
+    **Slash Commands:**
+    Type `/` anywhere to open a quick insert menu for headings, lists, images, code blocks, and more.
+    
+    <Note>
+    All edits are auto-saved to your **draft change request**. You can leave and come back anytime without losing work.
+    </Note>
+  </Step>
+
+  <Step title="Save Your Draft">
+    While auto-save is active, you can manually save anytime:
+    
+    - Click **Save Draft** in the top-right corner, or
+    - Press **Cmd/Ctrl + S**
+    
+    You'll see a success notification confirming your changes are saved.
+    
+    <Info>
+    Your changes are saved to a draft but not yet published to the live wiki. Drafts are only visible to you until merged.
+    </Info>
+  </Step>
+
+  <Step title="Review Your Changes">
+    Before publishing, review what you've created:
+    
+    1. Look at the **sidebar** - your new page appears with a blue **"New"** badge
+    2. Click on the page title to preview how it will look to readers
+    3. Edit any content by clicking back into the editor
+    4. You can create additional pages or groups while in draft mode
+    
+    **Understanding Draft Indicators:**
+    - 🔵 **New** badge: Page created in this draft
+    - 🔵 **Modified** badge: Existing page edited in this draft
+    - 🟠 **Reordered** badge: Page moved in the hierarchy
+    - 🔴 **Deleted** badge: Page removed in this draft
+  </Step>
+
+  <Step title="Publish Your Changes">
+    Ready to publish? Merge your change request to make content live:
+    
+    <Tabs>
+      <Tab title="Direct Merge (Manager/Approver)">
+        If you have Wiki Manager or Wiki Approver permissions:
+        
+        1. Click the **change request title** at the top of the page
+        2. Review your changes in the summary
+        3. Click **Merge Change Request**
+        4. Confirm the merge
+        
+        Your changes are now live! The page is published to the wiki.
+      </Tab>
+      
+      <Tab title="Request Review (Regular Users)">
+        If you're a regular Wiki User without merge permissions:
+        
+        1. Click the **change request title** at the top
+        2. Add a descriptive title and description:
+           - **Title**: e.g., "Add Getting Started page"
+           - **Description**: Explain what you added and why
+        3. Change status to **Open** or **In Review**
+        4. Click **Request Review** or assign reviewers
+        5. Wait for approval from Wiki Managers or Approvers
+        
+        Once approved, a manager will merge your changes.
+      </Tab>
+    </Tabs>
+    
+    <Warning>
+    Changes are only visible to end users after merging. Before merging, only authenticated users with Wiki permissions can see draft content.
+    </Warning>
+  </Step>
+
+  <Step title="View Your Published Page">
+    After merging, verify your page is live:
+    
+    1. The draft badges disappear from the sidebar
+    2. Your page appears in the normal wiki navigation
+    3. The page is accessible to all users (if published and space is public)
+    4. Visit your page URL directly: `http://yoursite.com/docs/getting-started`
+    
+    **Testing Publication:**
+    - Open an incognito/private browser window
+    - Navigate to your wiki space URL
+    - Your page should be visible without logging in (if space is published)
+    
+    <Note>
+    Both the **Wiki Space** and individual **pages** must be published for public visibility. Check space settings if pages aren't appearing.
+    </Note>
+  </Step>
+</Steps>
+
+## What You've Learned
+
+Congratulations! You've successfully:
+
+- ✅ Accessed Frappe Wiki application
+- ✅ Created your first Wiki Space with a custom route
+- ✅ Created a page with content using the Markdown editor
+- ✅ Understood the draft change request workflow
+- ✅ Published content to the live wiki
+
+## Understanding Key Concepts
+
+### Change Requests
+
+Frappe Wiki uses a **change request workflow** similar to Git pull requests:
+
+- **Drafts**: All edits are saved to a personal draft change request
+- **Review**: Changes can be reviewed before publishing
+- **Merge**: Publishing means merging the change request to the live wiki
+- **History**: Every change creates a revision for audit and rollback
+
+<Card title="Learn More About Change Requests" icon="git-branch" href="/features/change-requests">
+  Dive deeper into the review and approval workflow
+</Card>
+
+### Wiki Spaces vs Pages
+
+**Wiki Spaces** are top-level containers:
+- Separate documentation sites within one installation
+- Each has its own navigation, branding, and URL
+- Examples: Product docs, API reference, internal wiki
+
+**Wiki Pages** are content documents:
+- Written in Markdown
+- Organized hierarchically with groups (folders)
+- Can be published or unpublished individually
+
+### Publishing Control
+
+Content visibility has two levels:
+
+1. **Space Level**: The entire space can be public or private
+2. **Page Level**: Individual pages can be published or unpublished
+
+<Info>
+Both must be published for public access. This gives you fine-grained control over what's visible.
+</Info>
+
+## Next Steps
+
+Now that you've created your first page, explore more features:
+
+<CardGroup cols={2}>
+  <Card title="Organize Pages" icon="folder-tree" href="/guides/organizing-pages">
+    Create groups, build hierarchies, and structure your documentation
+  </Card>
+  
+  <Card title="Markdown Support" icon="markdown" href="/guides/markdown-support">
+    Learn advanced formatting with tables, code blocks, callouts, and more
+  </Card>
+  
+  <Card title="Review Workflow" icon="users" href="/guides/review-workflow">
+    Master the change request system for team collaboration
+  </Card>
+  
+  <Card title="Publishing Guide" icon="upload" href="/guides/publishing">
+    Control visibility and manage published content
+  </Card>
+</CardGroup>
+
+### Advanced Topics
+
+<AccordionGroup>
+  <Accordion title="Create Multiple Spaces">
+    Organize different documentation sets by creating additional Wiki Spaces:
+    - Go to **Wiki Space** list in Frappe desk
+    - Create new spaces for different audiences (e.g., `api`, `help`, `internal`)
+    - Configure branding and navigation per space
+    
+    See [Wiki Spaces](/features/wiki-spaces) for details.
+  </Accordion>
+  
+  <Accordion title="Add Attachments">
+    Enhance pages with file attachments:
+    - Use the image button to upload images
+    - Use the video button to upload videos
+    - Drag and drop files directly into the editor
+    
+    See [Attachments](/features/attachments) for details.
+  </Accordion>
+  
+  <Accordion title="Customize Branding">
+    Make your wiki space match your brand:
+    - Upload logos for light and dark themes
+    - Add a favicon for browser tabs
+    - Configure navbar items and external links
+    
+    See [Wiki Settings](/deployment/settings) for configuration options.
+  </Accordion>
+  
+  <Accordion title="Set Up Search">
+    Enable powerful full-text search:
+    - SQLite search works out of the box
+    - Install RedisSearch for better performance on large wikis (100+ pages)
+    
+    See [Search Setup](/deployment/search-setup) for configuration.
+  </Accordion>
+  
+  <Accordion title="Invite Team Members">
+    Collaborate with your team:
+    - Add users in Frappe User manager
+    - Assign **Wiki User** role for read-only access
+    - Assign **Wiki Approver** role for review and merge permissions
+    - Assign **Wiki Manager** role for full administrative access
+    
+    See [Collaboration](/features/collaboration) for permissions details.
+  </Accordion>
+</AccordionGroup>
+
+## Tips for Success
+
+<Card title="Best Practices" icon="lightbulb">
+  **Start Simple**  
+  Create a few essential pages first. You can always add more later.
+  
+  **Use Descriptive Titles**  
+  Clear page titles help users navigate and improve search results.
+  
+  **Organize with Groups**  
+  Group related pages into folders for better structure.
+  
+  **Write in Drafts**  
+  Use change requests to review content before publishing.
+  
+  **Keep URLs Clean**  
+  Customize routes to create memorable, SEO-friendly URLs.
+  
+  **Enable Feedback**  
+  Let users provide feedback to improve your documentation.
+</Card>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Can't see Wiki in app switcher">
+    **Solution:**
+    1. Verify Wiki app is installed: `bench --site mysite.local list-apps`
+    2. If not listed, install it: `bench --site mysite.local install-app wiki`
+    3. Clear cache and reload: `bench --site mysite.local clear-cache`
+  </Accordion>
+  
+  <Accordion title="Page not visible to public">
+    **Check these settings:**
+    1. Is the Wiki Space published? (Check Wiki Space doctype)
+    2. Is the individual page published? (Check in page settings)
+    3. Has the change request been merged? (Drafts are not public)
+    4. Is the page marked as private? (Private pages require login)
+  </Accordion>
+  
+  <Accordion title="Can't merge change request">
+    **Possible causes:**
+    1. Insufficient permissions (need Wiki Manager or Wiki Approver role)
+    2. Change request needs approval (check status)
+    3. Conflicts with main wiki (resolve conflicts first)
+    
+    **Solution:** Request a Wiki Manager to merge or assign you appropriate permissions.
+  </Accordion>
+  
+  <Accordion title="Changes not auto-saving">
+    **Troubleshooting steps:**
+    1. Check your internet connection
+    2. Look for error messages in the browser console (F12)
+    3. Try manual save with Cmd/Ctrl + S
+    4. Refresh the page and try again
+    5. Check that you're working in a draft change request
+  </Accordion>
+  
+  <Accordion title="Frontend assets not loading">
+    **Solution:**
+    1. Navigate to `apps/wiki/frontend`
+    2. Run `yarn install` or `npm install`
+    3. Run `yarn build` or `npm run build`
+    4. Run `bench build --app wiki`
+    5. Clear browser cache and reload
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+Need assistance? The Frappe Wiki community is here to help:
+
+- **Forum**: Ask questions on [discuss.frappe.io/c/wiki/72](https://discuss.frappe.io/c/wiki/72)
+- **Telegram**: Join the community at [t.me/frappewiki](https://t.me/frappewiki)
+- **GitHub**: Report bugs at [github.com/frappe/wiki/issues](https://github.com/frappe/wiki/issues)
+- **Documentation**: Browse the full docs you're reading now
+
+<Card title="Explore Full Documentation" icon="book" href="/introduction">
+  Return to the introduction for comprehensive guides and references
+</Card>

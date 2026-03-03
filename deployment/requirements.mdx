@@ -1,0 +1,125 @@
+---
+title: System Requirements
+description: Technical requirements for running Frappe Wiki
+---
+
+## Overview
+
+Frappe Wiki is built on the Frappe Framework and requires a full-stack environment to run. This page outlines the system requirements and dependencies needed to run Frappe Wiki successfully.
+
+## Python Requirements
+
+### Python Version
+
+- **Python 3.14 or higher** is required
+
+### Python Dependencies
+
+Frappe Wiki has minimal Python dependencies beyond the Frappe Framework:
+
+- **mistune** (>= 3.0) - Markdown parsing library
+
+## Frappe Framework Requirements
+
+Frappe Wiki depends on the Frappe Framework:
+
+- **Frappe Framework** version 16.0.0-dev to 17.0.0-dev
+
+The Frappe Framework itself requires:
+
+- **MariaDB** (10.6+) or **PostgreSQL** (12+)
+- **Redis** (6.0+)
+- **Node.js** (18+)
+- **Yarn** package manager
+
+## Node.js Dependencies
+
+### Frontend Dependencies
+
+The application uses the following key Node.js dependencies:
+
+```json
+{
+  "@tailwindcss/cli": "^4.0.14",
+  "tailwindcss": "^4.0.14"
+}
+```
+
+### Development Dependencies
+
+```json
+{
+  "@biomejs/biome": "1.4.1",
+  "@playwright/test": "^1.49.0",
+  "@tailwindcss/typography": "^0.5.16",
+  "@types/node": "^22.0.0"
+}
+```
+
+## Key Technology Stack
+
+### Frappe Framework
+
+[Frappe Framework](https://github.com/frappe/frappe) is a full-stack web application framework that provides:
+
+- Database abstraction layer
+- RESTful API
+- Background job processing
+- User authentication and permissions
+- Admin interface
+
+### Ace Editor
+
+[Ace Editor](https://github.com/ajaxorg/ace) - An embeddable code editor written in JavaScript, used for the wiki's markdown editing interface.
+
+### RedisSearch
+
+[RedisSearch](https://github.com/RediSearch/RediSearch) - A powerful search and indexing engine built on top of Redis, providing full-text search capabilities for wiki content.
+
+## System Resources
+
+### Minimum Requirements
+
+For development or small deployments:
+
+- **CPU**: 2 cores
+- **RAM**: 4 GB
+- **Storage**: 20 GB SSD
+
+### Recommended for Production
+
+For production deployments:
+
+- **CPU**: 4+ cores
+- **RAM**: 8+ GB
+- **Storage**: 50+ GB SSD
+- **Network**: Stable internet connection
+
+## Operating System
+
+Frappe Wiki can be installed on:
+
+- **Ubuntu** 20.04 LTS or newer (recommended)
+- **Debian** 10 or newer
+- **macOS** (for development)
+- **Windows** (via WSL2 for development)
+
+## Additional Requirements
+
+### For Production Deployment
+
+- **Nginx** or **Apache** web server
+- **Supervisor** for process management
+- **SSL Certificate** (recommended)
+
+### For Development
+
+- **Git** version control
+- **Bench CLI** - Frappe's command-line tool
+
+## Next Steps
+
+Once you've verified your system meets these requirements, proceed to:
+
+- [Self-Hosting Installation](/deployment/self-hosting) - Set up Frappe Wiki on your own server
+- [Frappe Cloud Deployment](/deployment/frappe-cloud) - Deploy on managed hosting

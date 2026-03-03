@@ -1,0 +1,445 @@
+---
+title: Attachments
+description: Add files, images, and media to your documentation pages
+---
+
+## Overview
+
+Frappe Wiki supports file attachments on Wiki Documents, enabling you to include downloadable files, images, PDFs, and other media in your documentation. Attachments are managed through Frappe Framework's standard file attachment system.
+
+## Attachment Support
+
+### Public Attachments
+
+Wiki Documents are configured to make all attachments publicly accessible:
+
+```json
+"make_attachments_public": 1
+```
+
+This ensures that when a page is published, attached files can be accessed by all users without authentication requirements.
+
+<Note>
+Public attachment access is critical for images embedded in published documentation. Without it, guest users would see broken image links.
+</Note>
+
+### Supported File Types
+
+Frappe Framework supports a wide range of file types:
+
+**Images:**
+- PNG, JPG, JPEG, GIF, SVG
+- WebP, AVIF (modern formats)
+- BMP, TIFF
+
+**Documents:**
+- PDF
+- DOCX, DOC
+- XLSX, XLS
+- PPTX, PPT
+- TXT, CSV
+
+**Media:**
+- MP4, WebM (video)
+- MP3, WAV, OGG (audio)
+
+**Archives:**
+- ZIP, TAR, GZ
+- 7Z, RAR
+
+**Code & Data:**
+- JSON, XML, YAML
+- SQL, LOG
+- Any text-based file
+
+<Warning>
+Executable files (.exe, .sh, .bat, .app) may be blocked by Frappe's security settings. This is intentional to prevent malicious uploads.
+</Warning>
+
+## Adding Attachments
+
+### Via Frappe Desk
+
+When editing a Wiki Document in Frappe Desk:
+
+<Steps>
+  <Step title="Open Document">
+    Navigate to the Wiki Document you want to attach files to
+  </Step>
+  
+  <Step title="Access Attachments">
+    Click the paperclip icon or "Attachments" button in the document toolbar
+  </Step>
+  
+  <Step title="Upload Files">
+    - Click "Attach" or drag-and-drop files
+    - Select files from your local system
+    - Wait for upload to complete
+  </Step>
+  
+  <Step title="Use in Content">
+    Reference attachments in Markdown:
+    - Copy the file URL from attachment list
+    - Embed in Markdown content
+  </Step>
+</Steps>
+
+### Via Change Request
+
+When using the Change Request workflow:
+
+1. Create or edit content in your Change Request
+2. Upload attachments to the Change Request document itself
+3. Reference attachment URLs in the page content
+4. Attachments carry over when CR is merged
+
+<Note>
+Attachments uploaded to a Change Request document remain associated with that CR. To attach files to the actual Wiki Document, reference them in content or upload after merge.
+</Note>
+
+## Embedding in Markdown
+
+### Images
+
+Embed images using standard Markdown syntax:
+
+```markdown
+![Alt text description](/files/image-name.png)
+```
+
+**With title:**
+```markdown
+![Alt text](/files/image.png "Hover title text")
+```
+
+**With sizing (if supported by renderer):**
+```markdown
+![Alt text](/files/image.png){width=500}
+```
+
+### Downloadable Files
+
+Create download links:
+
+```markdown
+[Download PDF Guide](/files/guide.pdf)
+```
+
+**With description:**
+```markdown
+Download our [installation guide (PDF, 2.5MB)](/files/install-guide.pdf) for detailed instructions.
+```
+
+### Videos
+
+For video embeds, you have two options:
+
+**Direct video attachment:**
+```markdown
+<video controls width="640">
+  <source src="/files/demo-video.mp4" type="video/mp4">
+  Your browser doesn't support video.
+</video>
+```
+
+**External video (YouTube, Vimeo, etc.):**
+```markdown
+<iframe width="560" height="315" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>
+```
+
+<Accordion title="Why use HTML for video?">
+While Markdown supports images natively, video embeds require HTML. Frappe Wiki's Markdown renderer allows safe HTML, enabling rich media embedding.
+
+The `ignore_xss_filter` flag on the content field allows HTML video tags without sanitization issues.
+</Accordion>
+
+## File URLs
+
+### URL Structure
+
+Frappe Framework stores attachments with URLs like:
+
+```
+/files/filename.ext
+```
+
+Or with site-specific paths in multi-tenant setups:
+
+```
+/files/{site-name}/filename.ext
+```
+
+### Private vs Public Files
+
+Frappe distinguishes between private and public files:
+
+**Public Files:**
+- Path: `/files/filename.ext`
+- Accessible without authentication
+- Used for Wiki Document attachments
+
+**Private Files:**
+- Path: `/private/files/filename.ext`
+- Require authentication and permission checks
+- Not used for Wiki attachments (due to `make_attachments_public`)
+
+### Getting Attachment URLs
+
+To get the URL of an attached file:
+
+**In Frappe Desk:**
+1. Open the document
+2. Click on the attachment
+3. Copy the URL from the preview dialog
+
+**Programmatically:**
+```python
+attachments = frappe.get_all(
+    "File",
+    filters={
+        "attached_to_doctype": "Wiki Document",
+        "attached_to_name": doc_name
+    },
+    fields=["name", "file_name", "file_url"]
+)
+```
+
+## Image Optimization
+
+### Recommended Practices
+
+<Steps>
+  <Step title="Compress Images">
+    Use tools like TinyPNG, ImageOptim, or Squoosh to reduce file size without visible quality loss
+  </Step>
+  
+  <Step title="Choose Appropriate Formats">
+    - Screenshots: PNG (lossless)
+    - Photos: JPEG (smaller size)
+    - Icons/logos: SVG (scalable)
+    - Modern browsers: WebP (best compression)
+  </Step>
+  
+  <Step title="Size Appropriately">
+    - Don't upload 4K images for display at 800px width
+    - Target 2x display density (1600px for 800px display)
+    - Smaller images load faster
+  </Step>
+  
+  <Step title="Use Alt Text">
+    Always provide descriptive alt text for accessibility and SEO
+  </Step>
+</Steps>
+
+### Image Size Guidelines
+
+| Use Case | Recommended Max Width | Format |
+|----------|----------------------|--------|
+| Hero images | 2000px | JPEG/WebP |
+| Content images | 1600px | PNG/JPEG |
+| Screenshots | 1920px | PNG |
+| Thumbnails | 400px | JPEG/WebP |
+| Icons | 512px | SVG/PNG |
+
+## Attachment Management
+
+### Listing Attachments
+
+View all attachments for a document:
+
+```python
+# Server-side
+attachments = frappe.db.get_all(
+    "File",
+    filters={
+        "attached_to_doctype": "Wiki Document",
+        "attached_to_name": "DOC-NAME"
+    },
+    fields=["name", "file_name", "file_size", "file_url", "creation"]
+)
+```
+
+### Deleting Attachments
+
+<Warning>
+Deleting an attachment removes the file permanently. If the file is referenced in content, those references will break.
+</Warning>
+
+To delete an attachment:
+
+1. Open the Wiki Document
+2. Access the Attachments section
+3. Click the delete icon for the attachment
+4. Confirm deletion
+5. Update any content references to the deleted file
+
+### Replacing Attachments
+
+To replace a file:
+
+**Option 1: Same filename**
+- Delete the old attachment
+- Upload new file with same filename
+- Existing content references continue to work
+
+**Option 2: New filename**
+- Upload new file
+- Update content to reference new filename
+- Delete old file
+
+## Storage Considerations
+
+### Storage Location
+
+Frappe stores uploaded files in:
+
+```
+{frappe-bench}/sites/{site-name}/public/files/
+```
+
+Or for private files:
+
+```
+{frappe-bench}/sites/{site-name}/private/files/
+```
+
+### Storage Limits
+
+Frappe Framework does not impose hard storage limits, but consider:
+
+- Server disk space availability
+- Backup storage requirements
+- Network bandwidth for downloads
+- CDN costs if using external hosting
+
+**Recommendations:**
+- Monitor storage usage regularly
+- Archive or remove unused attachments
+- Use external hosting (S3, CDN) for large files
+- Set organizational policies for file sizes
+
+### External Storage
+
+For large-scale deployments, consider external storage:
+
+**AWS S3:**
+- Configure Frappe to use S3 for file storage
+- Reduces server disk usage
+- Better scalability
+
+**CDN Integration:**
+- Serve files through CDN for faster global access
+- Reduce origin server bandwidth
+
+<Note>
+External storage configuration is done at the Frappe Framework level, not specific to Wiki. See Frappe documentation for S3 setup.
+</Note>
+
+## Security Considerations
+
+### File Upload Validation
+
+Frappe Framework validates uploads:
+- File extension whitelist/blacklist
+- MIME type checking
+- File size limits
+- Virus scanning (if configured)
+
+### Public Access Implications
+
+Because Wiki Document attachments are public:
+
+**Don't Upload:**
+- Sensitive documents
+- API keys or credentials
+- Personal information
+- Proprietary code
+- Anything not intended for public access
+
+**Do Upload:**
+- Public documentation assets
+- Marketing images
+- Tutorial videos
+- Sample code (non-sensitive)
+- Public datasets
+
+<Warning>
+Once an attachment is uploaded to a Wiki Document, assume it is publicly accessible. Don't rely on obscurity—file URLs can be discovered or shared.
+</Warning>
+
+## Best Practices
+
+<Steps>
+  <Step title="Organize with Naming">
+    Use descriptive, consistent filenames:
+    - Good: `installation-docker-setup.png`
+    - Bad: `screenshot-2024-03-03.png`
+  </Step>
+  
+  <Step title="Optimize Before Upload">
+    Compress and resize files before uploading to save storage and bandwidth
+  </Step>
+  
+  <Step title="Use Relative URLs">
+    Reference files with `/files/...` paths, not absolute URLs, for portability
+  </Step>
+  
+  <Step title="Version Large Files">
+    For files that change frequently, include version in filename: `api-guide-v2.pdf`
+  </Step>
+  
+  <Step title="Audit Regularly">
+    Periodically review attachments and remove unused files
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### Broken Image Links
+
+**Symptom:** Images show broken icon or don't load
+
+**Possible Causes:**
+1. File not uploaded or deleted
+2. Incorrect file path in Markdown
+3. Permission issues (shouldn't happen with public attachments)
+
+**Solutions:**
+- Verify file exists in attachment list
+- Check Markdown syntax and file path
+- Ensure `make_attachments_public: 1` is set
+
+### Upload Fails
+
+**Symptom:** File upload returns error
+
+**Possible Causes:**
+1. File size exceeds limit
+2. File type not allowed
+3. Disk space full
+4. Network timeout
+
+**Solutions:**
+- Check file size (reduce if needed)
+- Verify file type is allowed
+- Check server disk space
+- Try again with stable connection
+
+### Slow Downloads
+
+**Symptom:** Files take long time to download
+
+**Possible Causes:**
+1. Large file size
+2. Slow server bandwidth
+3. No CDN
+
+**Solutions:**
+- Compress files more aggressively
+- Use CDN for file delivery
+- Consider external hosting for large files
+
+## Related Features
+
+- [Wiki Documents](/features/wiki-documents) - Pages that hold attachments
+- [Change Requests](/features/change-requests) - Managing content with attachments

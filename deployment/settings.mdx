@@ -1,0 +1,196 @@
+---
+title: Wiki Settings
+description: Configure global settings for your Frappe Wiki installation
+---
+
+Wiki Settings is a Single DocType that controls global configuration options for your Frappe Wiki installation. Access it from **Wiki > Settings > Wiki Settings** in the Frappe Desk.
+
+## General Settings
+
+### Wiki Space
+
+<ParamField path="default_wiki_space" type="string" default="Wiki">
+  The default Wiki Space to use when creating new pages. Set this to your primary documentation space.
+</ParamField>
+
+### Theme Configuration
+
+<ParamField path="logo" type="Attach Image">
+  Logo displayed in light mode across all wiki pages. Recommended format: PNG or SVG with transparent background.
+</ParamField>
+
+<ParamField path="dark_mode_logo" type="Attach Image">
+  Logo displayed when dark mode is enabled. Ensure sufficient contrast for dark backgrounds.
+</ParamField>
+
+### Wiki Page Configurations
+
+<ParamField path="enable_table_of_contents" type="boolean" default="true">
+  Automatically generates a navigable table of contents from page headings. The TOC appears in the right sidebar on desktop views.
+</ParamField>
+
+<ParamField path="collapse_sidebar_groups" type="boolean" default="false">
+  When enabled, sidebar navigation groups are collapsed by default. Users can expand groups by clicking on them.
+</ParamField>
+
+<ParamField path="disable_guest_access" type="boolean" default="false">
+  Requires users to log in before viewing any wiki pages. Enable this for internal documentation that should not be publicly accessible.
+</ParamField>
+
+## Navbar Configuration
+
+Customize the navigation bar that appears at the top of all wiki pages.
+
+### Navbar Items
+
+<ParamField path="navbar" type="Table" options="Top Bar Item">
+  Define custom navigation links in the top bar. Each item includes:
+  
+  - **Label**: Text displayed for the link
+  - **URL**: Target URL (can be internal or external)
+  - **Open in New Tab**: Whether to open link in a new browser tab
+  - **Right**: Align item to the right side of the navbar
+</ParamField>
+
+### App Switcher
+
+<ParamField path="app_switcher_list" type="Table" options="Wiki App Switcher List Table">
+  Configure which Wiki Spaces appear in the app switcher dropdown. Allows users to quickly navigate between different documentation spaces.
+  
+  Each entry links to a Wiki Space by name, and the space's configured title and logo are automatically displayed.
+</ParamField>
+
+## Search Configuration
+
+Frappe Wiki supports multiple search backends. See [Search Setup](/deployment/search-setup) for detailed configuration.
+
+<ParamField path="add_search_bar" type="boolean" default="true">
+  Display the search bar in the wiki interface. Disable this to hide search functionality entirely.
+</ParamField>
+
+<ParamField path="use_sqlite_for_search" type="boolean" default="true">
+  Uses SQLite Full-Text Search (FTS5) for searching. This is the default search backend.
+  
+  <Note>
+    SQLite search takes precedence over RedisSearch if both are enabled. SQLite-based search is experimental but provides good performance for most use cases.
+  </Note>
+</ParamField>
+
+<ParamField path="use_redisearch_for_search" type="boolean" default="false">
+  Enable RedisSearch for faster, more accurate search results. Requires RedisSearch module to be installed and configured.
+  
+  See [RedisSearch Setup](/deployment/search-setup) for installation instructions.
+</ParamField>
+
+## Feedback Collection
+
+Enable user feedback collection on wiki pages.
+
+<ParamField path="enable_feedback" type="boolean" default="false">
+  Shows a feedback widget on every Wiki Page. Collects ratings, email addresses, and related information about page quality.
+</ParamField>
+
+<ParamField path="feedback_submission_limit" type="integer" default="3">
+  Hourly rate limit for feedback submissions per user. Prevents spam while allowing legitimate feedback.
+  
+  Must be a non-negative integer.
+</ParamField>
+
+<ParamField path="ask_for_contact_details" type="boolean" default="false">
+  When enabled, the feedback form requests the user's email address. Useful for following up on feedback.
+</ParamField>
+
+## Custom JavaScript
+
+<ParamField path="javascript" type="Code" language="JavaScript">
+  Add custom JavaScript code that executes on all wiki pages. Use this for:
+  
+  - Analytics tracking (Google Analytics, Mixpanel, etc.)
+  - Custom behavior and interactions
+  - Third-party integrations
+  - Custom styling via JavaScript
+  
+  <Warning>
+    Custom JavaScript executes in the browser context. Ensure your code is secure and does not introduce vulnerabilities or performance issues.
+  </Warning>
+</ParamField>
+
+### Example: Google Analytics
+
+```javascript
+// Add Google Analytics tracking
+(function() {
+  var script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID';
+  document.head.appendChild(script);
+  
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'GA_MEASUREMENT_ID');
+})();
+```
+
+### Example: Custom Page Behavior
+
+```javascript
+// Add custom click tracking
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('a[href^="http"]').forEach(function(link) {
+    link.addEventListener('click', function() {
+      console.log('External link clicked:', link.href);
+    });
+  });
+});
+```
+
+## Permissions
+
+Wiki Settings can be modified by users with the following roles:
+
+- **System Manager**: Full access to all settings
+- **Wiki Approver**: Full access to all settings
+
+## Cache Clearing
+
+When Wiki Settings are updated, the system automatically clears cached sidebar data and wiki page content to ensure changes take effect immediately.
+
+<Accordion title="How do I access Wiki Settings?">
+  1. Log in to Frappe Desk
+  2. Navigate to **Wiki** module
+  3. Go to **Settings > Wiki Settings**
+  4. Make your changes
+  5. Click **Save**
+</Accordion>
+
+<Accordion title="Why aren't my changes appearing?">
+  Changes to Wiki Settings should take effect immediately due to automatic cache clearing. If you don't see your changes:
+  
+  1. Hard refresh your browser (Ctrl+Shift+R or Cmd+Shift+R)
+  2. Clear your browser cache
+  3. Check if you have permission to modify Wiki Settings
+  4. Verify the setting was saved successfully in Desk
+</Accordion>
+
+<Accordion title="Can I have different settings per Wiki Space?">
+  Most settings in Wiki Settings are global. However, some settings like logos and navbar items can be overridden at the Wiki Space level. Each Wiki Space has its own configuration for:
+  
+  - Light/Dark mode logos
+  - Navbar items
+  - Favicon
+  - Feedback collection
+  
+  Wiki Space-specific settings take precedence over global Wiki Settings.
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Scripts" icon="code" href="/deployment/custom-scripts">
+    Learn about advanced customization with JavaScript
+  </Card>
+  <Card title="Search Setup" icon="magnifying-glass" href="/deployment/search-setup">
+    Configure RedisSearch for better search performance
+  </Card>
+</CardGroup>

@@ -1,0 +1,325 @@
+---
+title: Frappe Cloud Deployment
+description: Deploy Frappe Wiki on managed Frappe Cloud hosting
+---
+
+## Overview
+
+Frappe Cloud is a simple, user-friendly, and sophisticated managed hosting platform designed specifically for Frappe applications. It provides the easiest way to deploy and manage Frappe Wiki without worrying about infrastructure, maintenance, or updates.
+
+## What is Frappe Cloud?
+
+Frappe Cloud is an [open-source](https://github.com/frappe/press) platform that takes care of:
+
+- Installation and setup
+- Automatic upgrades
+- Monitoring and alerting
+- Maintenance and support
+- Backup and recovery
+- SSL certificates
+- Database management
+- Performance optimization
+
+It's a fully-featured developer platform with the ability to manage and control multiple Frappe deployments from a single dashboard.
+
+## Why Choose Frappe Cloud?
+
+### Peace of Mind
+
+- **Zero Infrastructure Management**: No need to worry about servers, updates, or security patches
+- **Automatic Backups**: Daily automated backups with easy restoration
+- **Monitoring**: Built-in monitoring and alerts for uptime and performance
+- **Security**: Automatic SSL certificates and security updates
+
+### Developer-Friendly
+
+- **One-Click Deployment**: Deploy Frappe Wiki in minutes
+- **Easy Updates**: Update to the latest version with a single click
+- **Staging Environments**: Test changes before pushing to production
+- **Custom Domains**: Use your own domain name
+
+### Scalability
+
+- **Auto-Scaling**: Resources scale automatically based on demand
+- **Performance**: Optimized infrastructure for Frappe applications
+- **Multiple Sites**: Manage multiple wikis from one dashboard
+
+## Getting Started with Frappe Cloud
+
+<Steps>
+
+<Step title="Create an Account">
+
+Sign up for a Frappe Cloud account at [frappecloud.com](https://frappecloud.com).
+
+You can start with a free trial to test the platform.
+
+</Step>
+
+<Step title="Deploy Frappe Wiki">
+
+Once logged in, navigate to the app marketplace:
+
+1. Go to the [Frappe Cloud Marketplace](https://frappecloud.com/marketplace/apps/wiki)
+2. Click on "Frappe Wiki" app
+3. Click "New Site" or "Add to existing site"
+
+<a href="https://frappecloud.com/marketplace/apps/wiki" target="_blank" rel="noopener noreferrer">
+  <img src="https://frappe.io/files/try-on-fc-black.png" alt="Try on Frappe Cloud" height="28" />
+</a>
+
+</Step>
+
+<Step title="Configure Your Site">
+
+Provide configuration details:
+
+- **Site Name**: Choose a subdomain (e.g., `mycompany-wiki`)
+- **Domain**: Use the default `.frappecloud.com` or add your custom domain
+- **Region**: Select the closest region to your users
+- **Plan**: Choose a suitable hosting plan based on your needs
+
+</Step>
+
+<Step title="Complete Installation">
+
+Click "Create" and wait for the deployment to complete. This typically takes 5-10 minutes.
+
+You'll receive an email with your admin credentials once the site is ready.
+
+</Step>
+
+</Steps>
+
+## Accessing Your Wiki
+
+Once deployed, you can access your wiki at:
+
+- **Default**: `https://your-site-name.frappecloud.com`
+- **Custom Domain**: `https://your-custom-domain.com` (after configuration)
+
+Log in with the Administrator credentials provided in your welcome email.
+
+## Managing Your Deployment
+
+### Dashboard Overview
+
+The Frappe Cloud dashboard provides:
+
+- **Site Overview**: CPU, memory, and storage usage
+- **Activity Log**: Recent activities and deployments
+- **Backups**: Access and restore backups
+- **Updates**: Available updates for Frappe Framework and Wiki app
+- **Settings**: Domain, SSL, and site configuration
+
+### Updating Frappe Wiki
+
+To update to the latest version:
+
+<Steps>
+
+<Step title="Check for Updates">
+
+Navigate to your site dashboard and click on the "Updates" tab.
+
+</Step>
+
+<Step title="Review Changes">
+
+Review the changelog to understand what's new or fixed.
+
+</Step>
+
+<Step title="Apply Update">
+
+Click "Update" and confirm. The platform will:
+
+1. Create an automatic backup
+2. Update the application
+3. Run database migrations
+4. Restart services
+
+</Step>
+
+</Steps>
+
+### Custom Domain Setup
+
+To use your own domain:
+
+<Steps>
+
+<Step title="Add Domain">
+
+In your site settings, go to "Domain" and add your custom domain.
+
+</Step>
+
+<Step title="Update DNS">
+
+Add the provided DNS records to your domain registrar:
+
+- **Type**: CNAME or A record
+- **Value**: Provided by Frappe Cloud
+
+</Step>
+
+<Step title="Enable SSL">
+
+Frappe Cloud automatically provisions SSL certificates via Let's Encrypt once DNS is configured.
+
+</Step>
+
+</Steps>
+
+### Backups and Recovery
+
+Frappe Cloud automatically creates daily backups:
+
+- **Automatic Backups**: Daily at scheduled time
+- **Retention**: Based on your plan (typically 30 days)
+- **Manual Backups**: Create on-demand backups before major changes
+- **One-Click Restore**: Restore from any backup point
+
+To restore from a backup:
+
+1. Navigate to "Backups" tab
+2. Select the backup you want to restore
+3. Click "Restore" and confirm
+
+### Monitoring and Alerts
+
+Frappe Cloud provides:
+
+- **Uptime Monitoring**: 24/7 monitoring with instant alerts
+- **Performance Metrics**: CPU, memory, and disk usage
+- **Error Tracking**: Automatic error detection and notification
+- **Email Alerts**: Notifications for critical events
+
+## Pricing and Plans
+
+Frappe Cloud offers several pricing tiers:
+
+- **Trial**: Free trial to test the platform
+- **Starter**: For small teams and personal projects
+- **Business**: For growing organizations
+- **Enterprise**: For large deployments with custom requirements
+
+Visit [Frappe Cloud Pricing](https://frappecloud.com/pricing) for detailed plan information.
+
+## Comparison: Cloud vs Self-Hosting
+
+| Feature | Frappe Cloud | Self-Hosting |
+|---------|-------------|-------------|
+| Setup Time | 5-10 minutes | 1-2 hours |
+| Infrastructure | Fully managed | Self-managed |
+| Updates | One-click | Manual |
+| Backups | Automatic | Manual setup required |
+| Monitoring | Built-in | Self-configured |
+| SSL | Automatic | Manual setup |
+| Scaling | Automatic | Manual |
+| Cost | Monthly subscription | Server + maintenance time |
+| Support | Included | Community |
+
+## Advanced Configuration
+
+### Environment Variables
+
+You can configure environment variables through the Frappe Cloud dashboard under site settings.
+
+### Custom Scripts
+
+Custom scripts can be added through Wiki Settings once your site is deployed. See [Custom Scripts](/customization/custom-scripts) for details.
+
+### Multiple Environments
+
+Frappe Cloud supports:
+
+- **Production**: Your live site
+- **Staging**: Test changes before production
+- **Development**: Experimental features and testing
+
+Create additional environments from your site dashboard.
+
+## Migration from Self-Hosted
+
+To migrate an existing self-hosted Wiki installation to Frappe Cloud:
+
+<Steps>
+
+<Step title="Create Backup">
+
+On your self-hosted installation:
+
+```bash
+bench --site sitename backup --with-files
+```
+
+</Step>
+
+<Step title="Download Backup Files">
+
+Download the backup files from:
+
+```bash
+~/frappe-bench/sites/sitename/private/backups/
+```
+
+</Step>
+
+<Step title="Create New Site on Frappe Cloud">
+
+Create a new site on Frappe Cloud as described above.
+
+</Step>
+
+<Step title="Upload and Restore">
+
+From the Frappe Cloud dashboard:
+
+1. Navigate to "Backups" tab
+2. Click "Upload Backup"
+3. Upload your database and files backup
+4. Click "Restore"
+
+</Step>
+
+</Steps>
+
+## Support and Resources
+
+### Getting Help
+
+Frappe Cloud provides multiple support channels:
+
+- **Email Support**: support@frappe.cloud
+- **Documentation**: [Frappe Cloud Docs](https://frappecloud.com/docs)
+- **Status Page**: Monitor platform status and incidents
+- **Priority Support**: Available on Business and Enterprise plans
+
+### Additional Resources
+
+- [Frappe Cloud GitHub](https://github.com/frappe/press) - Platform source code
+- [Feature Requests](https://github.com/frappe/press/issues) - Request new features
+- [Community Forum](https://discuss.frappe.io) - General discussions
+
+## Best Practices
+
+1. **Regular Updates**: Keep your Wiki app updated to the latest version
+2. **Test Changes**: Use staging environment for testing major changes
+3. **Monitor Usage**: Keep an eye on resource usage to optimize your plan
+4. **Custom Domain**: Use a custom domain for professional appearance
+5. **Backups**: Create manual backups before major configuration changes
+
+## Next Steps
+
+After deploying on Frappe Cloud:
+
+- Configure your [Wiki Settings](/configuration/wiki-settings)
+- Set up [user permissions](/configuration/permissions)
+- Create your first [wiki pages](/guides/creating-pages)
+- Customize with [custom scripts](/customization/custom-scripts)
+
+## Conclusion
+
+Frappe Cloud provides the fastest and most reliable way to deploy and manage Frappe Wiki. With managed infrastructure, automatic updates, and built-in monitoring, you can focus on creating great content while Frappe Cloud handles the technical details.

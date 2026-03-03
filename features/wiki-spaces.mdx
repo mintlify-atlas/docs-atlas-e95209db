@@ -1,0 +1,186 @@
+---
+title: Wiki Spaces
+description: Organize documentation into separate spaces with custom branding and navigation
+---
+
+## Overview
+
+Wiki Spaces are top-level containers that organize your documentation into separate, branded areas. Each space has its own navigation structure, branding, and settings, making it easy to manage multiple documentation sites from a single Frappe Wiki installation.
+
+## Creating a Wiki Space
+
+Wiki Spaces serve as the foundation for organizing your documentation. When you create a new space, Frappe Wiki automatically sets up the underlying structure.
+
+<Steps>
+  <Step title="Navigate to Wiki Space List">
+    Access the Wiki Space doctype from your Frappe desk
+  </Step>
+  
+  <Step title="Create New Space">
+    Click "New" and provide:
+    - **Space Name**: Display name for your space
+    - **Route**: URL path (e.g., `docs`, `help`, `kb`)
+  </Step>
+  
+  <Step title="Configure Settings">
+    Set up initial configuration:
+    - Publishing status
+    - Feedback collection
+    - Visibility in app switcher
+  </Step>
+</Steps>
+
+<Note>
+When a Wiki Space is created, Frappe Wiki automatically generates a root group (Wiki Document) to serve as the container for all pages in that space.
+</Note>
+
+## Space Configuration
+
+### General Settings
+
+**Route**  
+The URL path for accessing your space. Must be unique across all spaces.
+- Example: `docs` becomes accessible at `/docs`
+- Leading slashes are automatically removed
+- Cannot be changed after significant content is added
+
+**Space Name**  
+The display name shown in the app switcher and navigation.
+
+**Root Group**  
+Automatically created Wiki Document that serves as the container for all pages and groups in the space. This is managed internally and uses the nested set model for efficient tree operations.
+
+**Main Revision**  
+Links to the current published revision when using the Change Request system (see [Change Requests](/features/change-requests) for details).
+
+### Publishing Controls
+
+**Is Published**  
+Controls whether the space is publicly accessible. Unpublished spaces are only visible to authenticated users with appropriate permissions.
+
+**Show in Switcher**  
+Determines if the space appears in the app switcher menu.
+
+**Switcher Order**  
+Numeric value controlling the display order in the app switcher (lower numbers appear first).
+
+**Enable Feedback Collection**  
+Enables/disables the feedback widget for all pages in this space.
+
+## Branding & Appearance
+
+### Logo Configuration
+
+Customize your space's visual identity with multiple logo options:
+
+**Light Mode Logo**  
+Displayed when users are in light theme mode
+
+**Dark Mode Logo**  
+Displayed when users are in dark theme mode
+
+**App Switcher Logo**  
+Square icon shown in the app switcher dropdown (automatically made public)
+
+**Favicon**  
+Browser tab icon for your space
+
+<Note>
+Providing both light and dark mode logos ensures your branding looks great regardless of user preference.
+</Note>
+
+## Navigation Structure
+
+### Wiki Sidebars
+
+The `wiki_sidebars` table allows you to organize Wiki Documents into sidebar groups using the Wiki Group Item child table. Each item can reference:
+- A Wiki Document (page or group)
+- A parent label for grouping
+- Custom ordering via `idx`
+
+### Navbar Items
+
+Customize the top navigation bar with links to external resources:
+- Custom labels
+- External URLs
+- Open in new tab option
+- Right-aligned items
+- Automatic icon detection for known services (GitHub, YouTube, Twitter, LinkedIn, Discord, Slack, etc.)
+
+<Accordion title="Supported Icon Detection">
+Frappe Wiki automatically detects and displays icons for:
+- GitHub (github.com)
+- YouTube (youtube.com)
+- Twitter/X (twitter.com, x.com)
+- LinkedIn (linkedin.com)
+- Discord (discord.com, discord.gg)
+- Slack (slack.com)
+- Facebook (facebook.com)
+- Instagram (instagram.com)
+- Reddit (reddit.com)
+
+See `wiki/frappe_wiki/doctype/wiki_document/wiki_document.py:14-27` for the complete implementation.
+</Accordion>
+
+## Permissions
+
+Wiki Spaces use Frappe's standard permission system with four main roles:
+
+**System Manager**  
+Full access to create, edit, delete, and configure spaces
+
+**Wiki Manager**  
+Full access to manage spaces and content within them
+
+**Wiki Approver**  
+Create, edit, and approve changes to spaces and content
+
+**Wiki User**  
+Read-only access; can view but not modify spaces
+
+## Version 3 Migration
+
+For existing installations upgrading to the tree-based architecture:
+
+<Warning>
+The `migrate_to_v3()` method is a one-time migration that converts legacy sidebar structures to the new tree-based Wiki Document structure. This process:
+1. Creates a root group if one doesn't exist
+2. Converts sidebar items to Wiki Documents
+3. Preserves grouping and ordering
+4. Cannot be reversed
+</Warning>
+
+The migration automatically:
+- Creates the root group linked to the Wiki Space
+- Groups sidebar items by parent label
+- Maintains the original order (via `idx`)
+- Creates groups and pages as Wiki Documents
+
+## Best Practices
+
+<Steps>
+  <Step title="Plan Your Space Structure">
+    Before creating content, decide on:
+    - Space purpose and audience
+    - URL route naming convention
+    - Navigation hierarchy
+  </Step>
+  
+  <Step title="Configure Branding Early">
+    Set up logos and favicons before publishing to ensure consistent branding from launch
+  </Step>
+  
+  <Step title="Use Descriptive Routes">
+    Choose clear, memorable routes like `docs`, `api`, `guides` rather than generic names
+  </Step>
+  
+  <Step title="Enable Feedback Strategically">
+    Consider enabling feedback collection only for spaces where you actively monitor and respond to user input
+  </Step>
+</Steps>
+
+## Related Features
+
+- [Wiki Documents](/features/wiki-documents) - Create and organize pages within spaces
+- [Change Requests](/features/change-requests) - Manage updates through approval workflows
+- [Search](/features/search) - Full-text search across space content

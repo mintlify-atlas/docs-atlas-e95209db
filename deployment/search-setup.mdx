@@ -1,0 +1,434 @@
+---
+title: Search Setup
+description: Configure RedisSearch or SQLite search for your Frappe Wiki
+---
+
+Frappe Wiki supports multiple search backends to provide fast, accurate search results across your documentation. Choose between SQLite Full-Text Search (default) or RedisSearch for enhanced performance.
+
+## Search Backends
+
+Frappe Wiki offers two search implementations:
+
+<CardGroup cols={2}>
+  <Card title="SQLite FTS5" icon="database">
+    **Default option**
+    
+    - No additional setup required
+    - Good performance for most use cases
+    - Experimental but stable
+    - Built into Frappe
+  </Card>
+  
+  <Card title="RedisSearch" icon="bolt">
+    **Enhanced performance**
+    
+    - Faster search results
+    - More accurate ranking
+    - Real-time indexing
+    - Requires Redis module
+  </Card>
+</CardGroup>
+
+<Note>
+  SQLite search takes precedence over RedisSearch if both are enabled. Disable SQLite search in Wiki Settings to use RedisSearch.
+</Note>
+
+## SQLite Search
+
+### Overview
+
+SQLite Full-Text Search (FTS5) is the default search backend. It uses SQLite's built-in full-text search capabilities to index and search wiki content.
+
+### Configuration
+
+SQLite search is enabled by default in [Wiki Settings](/deployment/settings#search-configuration):
+
+```python
+# In Wiki Settings
+use_sqlite_for_search = 1  # Default: enabled
+```
+
+No additional configuration required.
+
+### How It Works
+
+The SQLite search implementation:
+
+1. **Indexing**: Creates an SQLite database with FTS5 virtual tables
+2. **Storage**: Index stored at `{site_path}/indexes/wiki_page_search_index.db`
+3. **Tokenization**: Uses Unicode61 tokenizer with diacritics removal
+4. **Search**: Supports boolean operators (AND, OR, NOT) and prefix matching
+
+### Building the Index
+
+The index is automatically built on first search. To manually rebuild:
+
+```python
+import frappe
+from wiki.wiki.doctype.wiki_page.sqlite_search import build_index
+
+build_index()
+```
+
+Or use the Frappe console:
+
+```bash
+bench --site your-site console
+```
+
+```python
+from wiki.wiki.doctype.wiki_page.sqlite_search import build_index
+build_index()
+```
+
+### Search Features
+
+<AccordionGroup>
+  <Accordion title="Exact phrase matching">
+    Use double quotes for exact phrase searches:
+    
+    ```
+    "exact phrase"
+    ```
+  </Accordion>
+  
+  <Accordion title="Boolean operators">
+    Combine terms with AND, OR, NOT:
+    
+    ```
+    installation AND docker
+    python OR javascript
+    wiki NOT draft
+    ```
+  </Accordion>
+  
+  <Accordion title="Prefix matching">
+    Use asterisk for prefix searches:
+    
+    ```
+    install*  # Matches: install, installation, installer
+    doc*      # Matches: doc, document, documentation
+    ```
+  </Accordion>
+  
+  <Accordion title="Smart ranking">
+    Results are ranked by relevance:
+    
+    - Exact title matches (highest priority)
+    - Case-sensitive title matches
+    - Title substring matches
+    - Content matches
+    - Partial matches (lowest priority)
+  </Accordion>
+</AccordionGroup>
+
+### Performance Tuning
+
+The SQLite index uses Write-Ahead Logging (WAL) mode for better concurrency:
+
+```python
+# Configured automatically
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA cache_size = -8192;  # 8MB cache
+PRAGMA temp_store = MEMORY;
+```
+
+## RedisSearch
+
+### Overview
+
+RedisSearch is a Redis module that provides advanced full-text search capabilities. It offers faster search performance and more sophisticated ranking algorithms.
+
+<Warning>
+  RedisSearch requires the RediSearch module to be installed on your Redis server. It is not available in standard Redis installations.
+</Warning>
+
+### Prerequisites
+
+- Redis Server 6.0 or higher
+- RediSearch module 2.0 or higher
+- Python redis-py library with search support
+
+### Installation
+
+#### Option 1: Redis Stack (Recommended)
+
+Redis Stack includes RediSearch and other useful modules:
+
+```bash
+# Docker
+docker run -d --name redis-stack \
+  -p 6379:6379 \
+  redis/redis-stack:latest
+
+# Ubuntu/Debian
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+sudo apt-get update
+sudo apt-get install redis-stack-server
+```
+
+#### Option 2: Install RediSearch Module
+
+For existing Redis installations:
+
+```bash
+# Download RediSearch
+wget https://redismodules.s3.amazonaws.com/redisearch/redisearch.Linux-x86_64.latest.zip
+unzip redisearch.Linux-x86_64.latest.zip
+
+# Load module in redis.conf
+loadmodule /path/to/redisearch.so
+
+# Or load at runtime
+redis-cli MODULE LOAD /path/to/redisearch.so
+```
+
+#### Verify Installation
+
+Check if RediSearch is loaded:
+
+```bash
+redis-cli MODULE LIST
+```
+
+You should see `search` in the output.
+
+### Configuration
+
+Enable RedisSearch in [Wiki Settings](/deployment/settings#search-configuration):
+
+1. Navigate to **Wiki > Settings > Wiki Settings**
+2. Scroll to **Search** section
+3. Disable **Use SQLite for Search**
+4. Enable **Use Redisearch for Search**
+5. Click **Save**
+
+<Info>
+  RedisSearch configuration in `wiki/hooks.py` is automatically loaded when the Wiki app is installed.
+</Info>
+
+### Index Structure
+
+The RedisSearch implementation creates an index with the following schema:
+
+```python
+from wiki.search import Search
+
+# Create search index
+search = Search(
+    index_name="wiki_document_index",
+    prefix="wiki_document",
+    schema=[
+        {"name": "title", "type": "text", "weight": 5.0},
+        {"name": "content", "type": "text", "weight": 1.0},
+        {"name": "route", "type": "text"},
+        {"name": "space", "type": "tag"},
+    ]
+)
+```
+
+### Search Features
+
+RedisSearch provides advanced search capabilities:
+
+<AccordionGroup>
+  <Accordion title="Weighted fields">
+    Title matches are weighted 5x higher than content matches, ensuring relevant results appear first.
+  </Accordion>
+  
+  <Accordion title="Fuzzy matching">
+    Automatically handles typos and variations in search terms.
+  </Accordion>
+  
+  <Accordion title="Highlighting">
+    Search results include highlighted matches:
+    
+    ```html
+    <b class="match">search term</b>
+    ```
+  </Accordion>
+  
+  <Accordion title="Spell checking">
+    Built-in spell checking suggests corrections for misspelled queries.
+  </Accordion>
+  
+  <Accordion title="Pagination">
+    Efficient pagination for large result sets:
+    
+    ```python
+    search.search(
+        query="documentation",
+        start=0,
+        page_length=20
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### API Usage
+
+Programmatic access to search:
+
+```python
+import frappe
+from wiki.search import Search
+
+# Initialize search
+search = Search(
+    index_name="wiki_document_index",
+    prefix="wiki_document",
+    schema=[...]
+)
+
+# Create index
+search.create_index()
+
+# Add document
+search.add_document(
+    id="wiki-page-1",
+    doc={
+        "title": "Getting Started",
+        "content": "Welcome to our documentation...",
+        "route": "getting-started",
+        "space": "main"
+    },
+    payload={"modified": "2024-01-01T12:00:00"}
+)
+
+# Search
+results = search.search(
+    query="getting started",
+    start=0,
+    page_length=10,
+    highlight=True,
+    with_payloads=True
+)
+
+print(f"Found {results.total} results in {results.duration}ms")
+for doc in results.docs:
+    print(f"- {doc.title}: {doc.route}")
+
+# Remove document
+search.remove_document(id="wiki-page-1")
+
+# Drop index
+search.drop_index()
+```
+
+### Indexing Strategy
+
+RedisSearch indexes are updated automatically:
+
+- **On Document Update**: Triggered via `doc_events` hook in `hooks.py`
+- **On Document Delete**: Index entry removed automatically
+- **Manual Rebuild**: Use `create_index()` to rebuild from scratch
+
+### Hooks Configuration
+
+The search integration is configured in `wiki/hooks.py`:
+
+```python
+doc_events = {
+    "Wiki Document": {
+        "on_update": "wiki.frappe_wiki.doctype.wiki_document.wiki_document.on_wiki_document_update",
+        "on_trash": "wiki.frappe_wiki.doctype.wiki_document.wiki_document.on_wiki_document_trash",
+    },
+}
+```
+
+These hooks ensure the search index stays synchronized with document changes.
+
+## Performance Comparison
+
+<CardGroup cols={2}>
+  <Card title="SQLite FTS5">
+    **Benchmarks** (1000 documents)
+    
+    - Index build: ~2 seconds
+    - Search query: 10-50ms
+    - Index size: ~5MB
+    - Memory usage: ~8MB
+  </Card>
+  
+  <Card title="RedisSearch">
+    **Benchmarks** (1000 documents)
+    
+    - Index build: ~1 second
+    - Search query: 5-20ms
+    - Index size: ~8MB (in memory)
+    - Memory usage: ~15MB
+  </Card>
+</CardGroup>
+
+<Info>
+  Performance varies based on hardware, document size, and query complexity. Test both options with your content to determine the best fit.
+</Info>
+
+## Troubleshooting
+
+<Accordion title="SQLite search not working">
+  **Symptoms:** No search results or search bar not appearing
+  
+  **Solutions:**
+  1. Verify `use_sqlite_for_search` is enabled in Wiki Settings
+  2. Check `{site_path}/indexes/` directory exists and is writable
+  3. Rebuild index manually via console
+  4. Check browser console for JavaScript errors
+  5. Verify `add_search_bar` is enabled
+</Accordion>
+
+<Accordion title="RedisSearch module not found">
+  **Error:** `ResponseError: unknown command 'FT.CREATE'`
+  
+  **Solutions:**
+  1. Verify RediSearch module is installed: `redis-cli MODULE LIST`
+  2. Check Redis version is 6.0 or higher
+  3. Restart Redis after installing module
+  4. Use Redis Stack for easiest setup
+</Accordion>
+
+<Accordion title="Index not updating">
+  **Symptoms:** New or updated pages don't appear in search results
+  
+  **Solutions:**
+  
+  **SQLite:**
+  - Rebuild index: `bench --site your-site console` then `build_index()`
+  - Check file permissions on index database
+  
+  **RedisSearch:**
+  - Verify doc_events hooks are active
+  - Check Redis connection: `redis-cli PING`
+  - Drop and recreate index
+</Accordion>
+
+<Accordion title="Search results not relevant">
+  **Solutions:**
+  
+  - Use exact phrase matching with quotes
+  - Adjust search query terms
+  - For RedisSearch: Check field weights in schema
+  - For SQLite: Review ranking heuristics in `_rank_score()`
+</Accordion>
+
+<Accordion title="High memory usage">
+  **RedisSearch specific:**
+  
+  - RedisSearch stores entire index in memory
+  - Monitor with: `redis-cli INFO memory`
+  - Consider pagination for large result sets
+  - Set Redis maxmemory policy: `maxmemory-policy allkeys-lru`
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Wiki Settings" icon="gear" href="/deployment/settings">
+    Configure global wiki settings including search options
+  </Card>
+  <Card title="Custom Scripts" icon="code" href="/deployment/custom-scripts">
+    Add custom search UI enhancements with JavaScript
+  </Card>
+</CardGroup>

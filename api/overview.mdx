@@ -1,0 +1,146 @@
+---
+title: REST API Overview
+description: Learn how to use the Frappe Wiki REST API
+---
+
+## Introduction
+
+The Frappe Wiki REST API allows you to programmatically interact with wiki spaces, documents, and change requests. All API endpoints follow Frappe's standard API conventions.
+
+## Base URL
+
+All API endpoints are accessed through the Frappe API method endpoint:
+
+```
+POST https://your-site.com/api/method/{method_name}
+```
+
+## Request Format
+
+### HTTP Method
+
+All Frappe API calls use **POST** requests, regardless of the operation type (read, write, update, or delete).
+
+### Content Type
+
+Requests should include the appropriate content type header:
+
+```http
+Content-Type: application/json
+```
+
+or
+
+```http
+Content-Type: application/x-www-form-urlencoded
+```
+
+### Request Body
+
+Parameters can be sent as JSON or form data:
+
+**JSON Example:**
+```json
+{
+  "name": "CR-001",
+  "title": "Update documentation"
+}
+```
+
+**Form Data Example:**
+```
+name=CR-001&title=Update%20documentation
+```
+
+## Response Format
+
+All API responses follow this structure:
+
+**Success Response:**
+```json
+{
+  "message": {
+    // Response data
+  }
+}
+```
+
+**Error Response:**
+```json
+{
+  "exc_type": "PermissionError",
+  "exception": "frappe.exceptions.PermissionError: Insufficient Permission",
+  "_server_messages": "[\"Error message\"]"
+}
+```
+
+## Authentication
+
+See the [Authentication](/api/authentication) page for details on API key authentication and session-based authentication.
+
+## Permissions
+
+API endpoints respect Frappe's role-based permission system:
+
+- **Guest Access**: Some endpoints allow guest access (marked with `allow_guest=True`)
+- **User Access**: Most endpoints require authentication
+- **Wiki Manager**: Administrative operations require the "Wiki Manager" or "System Manager" role
+- **Wiki Approver**: Review and merge operations require "Wiki Approver" role
+
+## Common HTTP Status Codes
+
+- **200 OK**: Request succeeded
+- **403 Forbidden**: Insufficient permissions
+- **404 Not Found**: Resource not found
+- **417 Expectation Failed**: Validation error or business logic error
+
+## Rate Limiting
+
+Frappe may implement rate limiting based on your site configuration. Check with your site administrator for specific limits.
+
+## API Sections
+
+<CardGroup cols={2}>
+  <Card title="Change Requests" icon="code-pull-request" href="/api/change-requests">
+    Manage wiki change requests, reviews, and merges
+  </Card>
+  <Card title="Wiki Spaces" icon="folder-tree" href="/api/wiki-spaces">
+    Access wiki space tree structure and navigation
+  </Card>
+  <Card title="Documents" icon="file-lines" href="/api/documents">
+    Read and manage wiki documents
+  </Card>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    Authenticate API requests
+  </Card>
+</CardGroup>
+
+## Example Request
+
+Here's a complete example using curl:
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.change_requests.get_my_change_requests \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json"
+```
+
+## Client Libraries
+
+You can use standard HTTP clients in any programming language:
+
+- **Python**: `requests`, `httpx`
+- **JavaScript**: `fetch`, `axios`
+- **PHP**: `cURL`, `Guzzle`
+- **Ruby**: `net/http`, `HTTParty`
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    Set up API authentication
+  </Card>
+  <Card title="Change Requests API" icon="code-pull-request" href="/api/change-requests">
+    Start working with change requests
+  </Card>
+</CardGroup>

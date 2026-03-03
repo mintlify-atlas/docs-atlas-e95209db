@@ -1,0 +1,511 @@
+---
+title: WikiRevision
+description: API reference for the WikiRevision class
+---
+
+The `WikiRevision` class represents a snapshot of wiki documents at a point in time. It provides version control functionality similar to Git commits.
+
+## Class Definition
+
+```python
+from frappe.model.document import Document
+
+class WikiRevision(Document):
+    pass
+```
+
+**Location:** `wiki/frappe_wiki/doctype/wiki_revision/wiki_revision.py`
+
+## DocType Fields
+
+<ParamField path="wiki_space" type="Link" required>
+  Link to the Wiki Space this revision belongs to
+</ParamField>
+
+<ParamField path="change_request" type="Link">
+  Link to the Wiki Change Request if this revision is part of a CR
+</ParamField>
+
+<ParamField path="parent_revision" type="Link">
+  Link to the parent revision (for overlay revisions)
+</ParamField>
+
+<ParamField path="message" type="Data">
+  Commit message describing this revision
+</ParamField>
+
+<ParamField path="is_merge" type="Check" default="0">
+  Whether this revision is a merge revision
+</ParamField>
+
+<ParamField path="is_working" type="Check" default="0">
+  Whether this is a working/draft revision
+</ParamField>
+
+<ParamField path="is_overlay" type="Check" default="0">
+  Whether this is an overlay revision (inherits from parent)
+</ParamField>
+
+<ParamField path="hashes_stale" type="Check" default="0">
+  Whether the tree/content hashes need recomputation
+</ParamField>
+
+<ParamField path="created_by" type="Link">
+  User who created this revision (read-only)
+</ParamField>
+
+<ParamField path="created_at" type="Datetime">
+  Timestamp when revision was created (read-only)
+</ParamField>
+
+<ParamField path="tree_hash" type="Data">
+  SHA256 hash of the tree structure (read-only)
+</ParamField>
+
+<ParamField path="content_hash" type="Data">
+  SHA256 hash of all content blobs (read-only)
+</ParamField>
+
+<ParamField path="doc_count" type="Int">
+  Number of documents in this revision (read-only)
+</ParamField>
+
+## Module Functions
+
+### create_revision_from_live_tree(wiki_space, message, ...)
+
+Creates a new revision from the current live Wiki Documents.
+
+```python
+def create_revision_from_live_tree(
+    wiki_space: str,
+    message: str | None = None,
+    change_request: str | None = None,
+    parent_revision: str | None = None,
+    is_working: int = 0,
+    is_merge: int = 0,
+) -> Document
+```
+
+<ParamField path="wiki_space" type="str" required>
+  Name of the Wiki Space
+</ParamField>
+
+<ParamField path="message" type="str">
+  Commit message
+</ParamField>
+
+<ParamField path="change_request" type="str">
+  Associated change request name
+</ParamField>
+
+<ParamField path="parent_revision" type="str">
+  Parent revision name
+</ParamField>
+
+<ParamField path="is_working" type="int" default="0">
+  Whether this is a working revision
+</ParamField>
+
+<ParamField path="is_merge" type="int" default="0">
+  Whether this is a merge revision
+</ParamField>
+
+**Returns:** `Document` - The created WikiRevision document
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import create_revision_from_live_tree
+
+revision = create_revision_from_live_tree(
+    wiki_space="SPACE-001",
+    message="Initial snapshot"
+)
+print(f"Created revision: {revision.name}")
+```
+
+**Source:** `wiki_revision.py:19`
+
+### create_overlay_revision(base_revision, change_request, is_working)
+
+Creates an empty overlay revision that inherits from a base revision.
+
+```python
+def create_overlay_revision(
+    base_revision: str,
+    change_request: str | None = None,
+    is_working: int = 0,
+) -> Document
+```
+
+<ParamField path="base_revision" type="str" required>
+  Name of the base revision to inherit from
+</ParamField>
+
+<ParamField path="change_request" type="str">
+  Associated change request name
+</ParamField>
+
+<ParamField path="is_working" type="int" default="0">
+  Whether this is a working revision
+</ParamField>
+
+**Returns:** `Document` - The created overlay WikiRevision
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import create_overlay_revision
+
+overlay = create_overlay_revision(
+    base_revision="REV-001",
+    is_working=1
+)
+```
+
+**Source:** `wiki_revision.py:99`
+
+### clone_revision(base_revision, change_request, parent_revision, is_working)
+
+Clones an existing revision with all its items.
+
+```python
+def clone_revision(
+    base_revision: str,
+    change_request: str | None = None,
+    parent_revision: str | None = None,
+    is_working: int = 0,
+) -> Document
+```
+
+<ParamField path="base_revision" type="str" required>
+  Name of the revision to clone
+</ParamField>
+
+<ParamField path="change_request" type="str">
+  Associated change request name
+</ParamField>
+
+<ParamField path="parent_revision" type="str">
+  Parent revision name (defaults to base_revision)
+</ParamField>
+
+<ParamField path="is_working" type="int" default="0">
+  Whether this is a working revision
+</ParamField>
+
+**Returns:** `Document` - The cloned WikiRevision
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import clone_revision
+
+cloned = clone_revision(
+    base_revision="REV-001",
+    change_request="CR-002"
+)
+```
+
+**Source:** `wiki_revision.py:124`
+
+### get_or_create_content_blob(content, content_type)
+
+Creates or returns an existing Wiki Content Blob for the given content.
+
+```python
+def get_or_create_content_blob(content: str, content_type: str = "markdown") -> str
+```
+
+<ParamField path="content" type="str" required>
+  The content text
+</ParamField>
+
+<ParamField path="content_type" type="str" default="markdown">
+  Type of content (e.g., "markdown", "html")
+</ParamField>
+
+**Returns:** `str` - Name of the Wiki Content Blob document
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import get_or_create_content_blob
+
+content = "# Hello World\n\nWelcome to our wiki."
+blob_name = get_or_create_content_blob(content)
+print(f"Content blob: {blob_name}")
+```
+
+**Source:** `wiki_revision.py:182`
+
+### recompute_revision_hashes(revision)
+
+Recomputes the tree_hash and content_hash for a revision.
+
+```python
+def recompute_revision_hashes(revision: str) -> None
+```
+
+<ParamField path="revision" type="str" required>
+  Name of the revision
+</ParamField>
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import recompute_revision_hashes
+
+recompute_revision_hashes("REV-001")
+```
+
+**Source:** `wiki_revision.py:200`
+
+### get_revision_item_map(revision)
+
+Returns a dictionary mapping doc_key to revision item data.
+
+```python
+def get_revision_item_map(revision: str) -> dict[str, dict[str, Any]]
+```
+
+<ParamField path="revision" type="str" required>
+  Name of the revision
+</ParamField>
+
+**Returns:** `dict[str, dict]` - Dictionary with doc_key as key and item data as value
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import get_revision_item_map
+
+item_map = get_revision_item_map("REV-001")
+for doc_key, item in item_map.items():
+    print(f"{doc_key}: {item['title']}")
+```
+
+**Source:** `wiki_revision.py:261`
+
+### get_effective_revision_item_map(revision)
+
+Returns the effective item map, resolving overlay inheritance.
+
+```python
+def get_effective_revision_item_map(revision: str) -> dict[str, dict[str, Any]]
+```
+
+<ParamField path="revision" type="str" required>
+  Name of the revision
+</ParamField>
+
+**Returns:** `dict[str, dict]` - Merged dictionary of base + overlay items
+
+**Description:**
+For overlay revisions, this returns base items merged with overlay items (overlay wins).
+For full revisions, this is the same as `get_revision_item_map()`.
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import get_effective_revision_item_map
+
+effective = get_effective_revision_item_map("REV-OVERLAY-001")
+# Returns items from both base and overlay, with overlay taking precedence
+```
+
+**Source:** `wiki_revision.py:302`
+
+### ensure_overlay_item(revision, doc_key)
+
+Copy-on-write: ensures a doc_key has an item in the overlay revision.
+
+```python
+def ensure_overlay_item(revision: str, doc_key: str) -> str | None
+```
+
+<ParamField path="revision" type="str" required>
+  Name of the overlay revision
+</ParamField>
+
+<ParamField path="doc_key" type="str" required>
+  The doc_key to ensure exists in overlay
+</ParamField>
+
+**Returns:** `str | None` - Name of the Wiki Revision Item, or None if item doesn't exist
+
+**Description:**
+If the item already exists in the overlay, returns its name.
+If the revision is an overlay and the item exists in the base, copies it to the overlay.
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import ensure_overlay_item
+
+item_name = ensure_overlay_item("REV-OVERLAY-001", "doc-key-123")
+if item_name:
+    # Item now exists in the overlay and can be modified
+    item = frappe.get_doc("Wiki Revision Item", item_name)
+    item.title = "Updated Title"
+    item.save()
+```
+
+**Source:** `wiki_revision.py:320`
+
+### mark_hashes_stale(revision)
+
+Marks a revision's hashes as needing recomputation.
+
+```python
+def mark_hashes_stale(revision: str) -> None
+```
+
+<ParamField path="revision" type="str" required>
+  Name of the revision
+</ParamField>
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import mark_hashes_stale
+
+# After modifying revision items
+mark_hashes_stale("REV-001")
+```
+
+**Source:** `wiki_revision.py:375`
+
+### ensure_revision_hashes(revision)
+
+Recomputes hashes if they are stale.
+
+```python
+def ensure_revision_hashes(revision: str) -> None
+```
+
+<ParamField path="revision" type="str" required>
+  Name of the revision
+</ParamField>
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import ensure_revision_hashes
+
+# Before comparing revisions
+ensure_revision_hashes("REV-001")
+ensure_revision_hashes("REV-002")
+```
+
+**Source:** `wiki_revision.py:380`
+
+### build_tree_order(items)
+
+Builds a depth-first ordered list of doc_keys from an item map.
+
+```python
+def build_tree_order(items: dict[str, dict[str, Any]]) -> list[str]
+```
+
+<ParamField path="items" type="dict" required>
+  Dictionary mapping doc_key to item data
+</ParamField>
+
+**Returns:** `list[str]` - Ordered list of doc_keys in tree order
+
+**Example:**
+```python
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import (
+    get_revision_item_map,
+    build_tree_order
+)
+
+item_map = get_revision_item_map("REV-001")
+ordered_keys = build_tree_order(item_map)
+
+for doc_key in ordered_keys:
+    print(f"Processing {item_map[doc_key]['title']}")
+```
+
+**Source:** `wiki_revision.py:389`
+
+## Usage Examples
+
+### Creating a Revision from Live Documents
+
+```python
+import frappe
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import create_revision_from_live_tree
+
+# Snapshot the current state
+revision = create_revision_from_live_tree(
+    wiki_space="SPACE-001",
+    message="Documentation update - Q1 2024"
+)
+
+print(f"Created revision {revision.name}")
+print(f"Tree hash: {revision.tree_hash}")
+print(f"Document count: {revision.doc_count}")
+```
+
+### Working with Overlay Revisions
+
+```python
+import frappe
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import (
+    create_overlay_revision,
+    ensure_overlay_item,
+    mark_hashes_stale
+)
+
+# Create an overlay for making changes
+overlay = create_overlay_revision(
+    base_revision="REV-001",
+    is_working=1
+)
+
+# Copy-on-write: modify an item
+item_name = ensure_overlay_item(overlay.name, "doc-key-123")
+if item_name:
+    item = frappe.get_doc("Wiki Revision Item", item_name)
+    item.title = "Updated Title"
+    item.save()
+    
+    # Mark hashes as stale after changes
+    mark_hashes_stale(overlay.name)
+```
+
+### Comparing Revisions
+
+```python
+import frappe
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import (
+    get_revision_item_map,
+    ensure_revision_hashes
+)
+
+# Ensure hashes are up-to-date
+ensure_revision_hashes("REV-001")
+ensure_revision_hashes("REV-002")
+
+# Get revision info
+rev1 = frappe.get_doc("Wiki Revision", "REV-001")
+rev2 = frappe.get_doc("Wiki Revision", "REV-002")
+
+if rev1.tree_hash != rev2.tree_hash:
+    print("Tree structure has changed")
+
+if rev1.content_hash != rev2.content_hash:
+    print("Content has changed")
+```
+
+### Building Ordered Document List
+
+```python
+import frappe
+from wiki.frappe_wiki.doctype.wiki_revision.wiki_revision import (
+    get_revision_item_map,
+    build_tree_order
+)
+
+item_map = get_revision_item_map("REV-001")
+ordered_keys = build_tree_order(item_map)
+
+# Process documents in tree order
+for doc_key in ordered_keys:
+    item = item_map[doc_key]
+    if not item['is_deleted']:
+        print(f"{'  ' * item.get('depth', 0)}{item['title']}")
+```

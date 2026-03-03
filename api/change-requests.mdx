@@ -1,0 +1,632 @@
+---
+title: Change Requests API
+description: Manage wiki change requests, reviews, and merges
+---
+
+## Overview
+
+The Change Requests API allows you to create, manage, review, and merge changes to wiki documentation. Change requests support a collaborative workflow with draft, review, and approval stages.
+
+## Get My Change Requests
+
+Retrieve all change requests created by the authenticated user.
+
+```
+POST /api/method/wiki.api.change_requests.get_my_change_requests
+```
+
+### Request
+
+No parameters required.
+
+### Response
+
+<ResponseField name="message" type="array">
+  Array of change request objects
+  
+  <Expandable title="Change Request Object">
+    <ResponseField name="name" type="string">
+      Unique identifier of the change request
+    </ResponseField>
+    
+    <ResponseField name="title" type="string">
+      Title of the change request
+    </ResponseField>
+    
+    <ResponseField name="wiki_space" type="string">
+      ID of the wiki space
+    </ResponseField>
+    
+    <ResponseField name="wiki_space_name" type="string">
+      Display name of the wiki space
+    </ResponseField>
+    
+    <ResponseField name="status" type="string">
+      Status: `Draft`, `In Review`, `Approved`, `Changes Requested`, `Merged`, or `Archived`
+    </ResponseField>
+    
+    <ResponseField name="modified" type="datetime">
+      Last modified timestamp
+    </ResponseField>
+    
+    <ResponseField name="archived_at" type="datetime">
+      Timestamp when archived (if applicable)
+    </ResponseField>
+    
+    <ResponseField name="merged_at" type="datetime">
+      Timestamp when merged (if applicable)
+    </ResponseField>
+    
+    <ResponseField name="change_count" type="integer">
+      Number of changes in the request
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.change_requests.get_my_change_requests \
+  -H "Authorization: token api_key:api_secret"
+```
+
+**Response:**
+```json
+{
+  "message": [
+    {
+      "name": "CR-2025-0001",
+      "title": "Update API documentation",
+      "wiki_space": "WS-001",
+      "wiki_space_name": "Developer Docs",
+      "status": "Draft",
+      "modified": "2025-01-15 10:30:00",
+      "archived_at": null,
+      "merged_at": null,
+      "change_count": 5
+    }
+  ]
+}
+```
+
+## Get Pending Reviews
+
+Retrieve all change requests pending review. Requires Wiki Manager or System Manager role.
+
+```
+POST /api/method/wiki.api.change_requests.get_pending_reviews
+```
+
+### Response
+
+<ResponseField name="message" type="array">
+  Array of pending change requests with additional author information
+  
+  <Expandable title="Pending Review Object">
+    <ResponseField name="name" type="string">
+      Change request identifier
+    </ResponseField>
+    
+    <ResponseField name="title" type="string">
+      Change request title
+    </ResponseField>
+    
+    <ResponseField name="wiki_space" type="string">
+      Wiki space ID
+    </ResponseField>
+    
+    <ResponseField name="wiki_space_name" type="string">
+      Wiki space name
+    </ResponseField>
+    
+    <ResponseField name="status" type="string">
+      Status: `In Review` or `Approved`
+    </ResponseField>
+    
+    <ResponseField name="owner" type="string">
+      User email of the author
+    </ResponseField>
+    
+    <ResponseField name="author_name" type="string">
+      Full name of the author
+    </ResponseField>
+    
+    <ResponseField name="author_image" type="string">
+      Profile image URL of the author
+    </ResponseField>
+    
+    <ResponseField name="submitted_at" type="datetime">
+      Submission timestamp
+    </ResponseField>
+    
+    <ResponseField name="change_count" type="integer">
+      Number of changes
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.api.change_requests.get_pending_reviews \
+  -H "Authorization: token api_key:api_secret"
+```
+
+## Get Change Request
+
+Retrieve detailed information about a specific change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_change_request
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Unique identifier of the change request
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_change_request \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "CR-2025-0001"}'
+```
+
+## Create or Get Draft
+
+Get an existing draft change request or create a new one for a wiki space.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_or_create_draft_change_request
+```
+
+### Parameters
+
+<ParamField path="wiki_space" type="string" required>
+  ID of the wiki space
+</ParamField>
+
+<ParamField path="title" type="string">
+  Title for the change request (optional, auto-generated if not provided)
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_or_create_draft_change_request \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "wiki_space": "WS-001",
+    "title": "Update documentation"
+  }'
+```
+
+## Create Change Request
+
+Create a new change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.create_change_request
+```
+
+### Parameters
+
+<ParamField path="wiki_space" type="string" required>
+  ID of the wiki space
+</ParamField>
+
+<ParamField path="title" type="string" required>
+  Title of the change request
+</ParamField>
+
+<ParamField path="description" type="string">
+  Detailed description of the changes
+</ParamField>
+
+## Update Change Request
+
+Update the title or description of a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.update_change_request
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="title" type="string">
+  New title
+</ParamField>
+
+<ParamField path="description" type="string">
+  New description
+</ParamField>
+
+## Archive Change Request
+
+Archive a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.archive_change_request
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+## Get CR Tree
+
+Get the tree structure of documents in a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_cr_tree
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+### Response
+
+<ResponseField name="children" type="array">
+  Nested tree structure of documents
+</ResponseField>
+
+<ResponseField name="root_group" type="string">
+  Root document key
+</ResponseField>
+
+## Get CR Page
+
+Get detailed information about a specific page in a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_cr_page
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="doc_key" type="string" required>
+  Document key
+</ParamField>
+
+### Response
+
+<ResponseField name="doc_key" type="string">
+  Document key
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  Page title
+</ResponseField>
+
+<ResponseField name="content" type="string">
+  Markdown content
+</ResponseField>
+
+<ResponseField name="route" type="string">
+  URL route
+</ResponseField>
+
+<ResponseField name="is_group" type="boolean">
+  Whether this is a group (folder)
+</ResponseField>
+
+<ResponseField name="is_published" type="boolean">
+  Publication status
+</ResponseField>
+
+## Create CR Page
+
+Create a new page in a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.create_cr_page
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="parent_key" type="string" required>
+  Parent document key
+</ParamField>
+
+<ParamField path="title" type="string" required>
+  Page title
+</ParamField>
+
+<ParamField path="slug" type="string">
+  URL slug (auto-generated if not provided)
+</ParamField>
+
+<ParamField path="is_group" type="integer" default="0">
+  1 for group/folder, 0 for page
+</ParamField>
+
+<ParamField path="is_published" type="integer" default="1">
+  Publication status
+</ParamField>
+
+<ParamField path="content" type="string">
+  Markdown content
+</ParamField>
+
+<ParamField path="order_index" type="integer">
+  Sort order (auto-calculated if not provided)
+</ParamField>
+
+<ParamField path="is_external_link" type="integer" default="0">
+  1 for external link
+</ParamField>
+
+<ParamField path="external_url" type="string">
+  External URL if is_external_link is 1
+</ParamField>
+
+### Response
+
+Returns the `doc_key` of the newly created page.
+
+## Update CR Page
+
+Update a page in a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.update_cr_page
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="doc_key" type="string" required>
+  Document key to update
+</ParamField>
+
+<ParamField path="fields" type="object" required>
+  Object containing fields to update (title, slug, content, is_published, etc.)
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.update_cr_page \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "CR-2025-0001",
+    "doc_key": "abc123",
+    "fields": {
+      "title": "Updated Title",
+      "content": "# New Content\n\nUpdated documentation."
+    }
+  }'
+```
+
+## Delete CR Page
+
+Delete a page and its children from a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.delete_cr_page
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="doc_key" type="string" required>
+  Document key to delete
+</ParamField>
+
+## Move CR Page
+
+Move a page to a different parent in a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.move_cr_page
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="doc_key" type="string" required>
+  Document key to move
+</ParamField>
+
+<ParamField path="new_parent_key" type="string" required>
+  New parent document key
+</ParamField>
+
+<ParamField path="new_order_index" type="integer">
+  Position in new parent
+</ParamField>
+
+## Reorder CR Children
+
+Reorder child pages within a parent.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.reorder_cr_children
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="parent_key" type="string" required>
+  Parent document key
+</ParamField>
+
+<ParamField path="ordered_doc_keys" type="array" required>
+  Array of doc_keys in desired order
+</ParamField>
+
+## Diff Change Request
+
+Get the differences between base and head revisions.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.diff_change_request
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="scope" type="string" default="summary">
+  Scope of diff: `summary` or `full`
+</ParamField>
+
+<ParamField path="doc_key" type="string">
+  Specific document key to diff
+</ParamField>
+
+## Request Review
+
+Submit a change request for review.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.request_review
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="reviewers" type="array" required>
+  Array of reviewer user emails
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://your-site.com/api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.request_review \
+  -H "Authorization: token api_key:api_secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "CR-2025-0001",
+    "reviewers": ["reviewer@example.com"]
+  }'
+```
+
+## Review Action
+
+Submit a review (approve, request changes).
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.review_action
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+<ParamField path="reviewer" type="string" required>
+  Reviewer user email (must be authenticated user)
+</ParamField>
+
+<ParamField path="status" type="string" required>
+  Review status: `Approved` or `Changes Requested`
+</ParamField>
+
+<ParamField path="comment" type="string">
+  Review comment
+</ParamField>
+
+## Merge Change Request
+
+Merge an approved change request. Requires Wiki Manager or Wiki Approver role.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.merge_change_request
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+### Response
+
+Returns the name of the merged revision.
+
+## Get Merge Conflicts
+
+Get open merge conflicts for a change request.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.get_merge_conflicts
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>
+
+## Resolve Merge Conflict
+
+Resolve a merge conflict by choosing 'ours' or 'theirs'.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.resolve_merge_conflict
+```
+
+### Parameters
+
+<ParamField path="conflict_name" type="string" required>
+  Conflict identifier
+</ParamField>
+
+<ParamField path="resolution" type="string" required>
+  Resolution choice: `ours` or `theirs`
+</ParamField>
+
+## Retry Merge After Resolution
+
+Retry merge after all conflicts are resolved.
+
+```
+POST /api/method/wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.retry_merge_after_resolution
+```
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Change request identifier
+</ParamField>

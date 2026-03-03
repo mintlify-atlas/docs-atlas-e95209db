@@ -1,0 +1,298 @@
+---
+title: Wiki Documents
+description: Create and organize pages and groups using a hierarchical tree structure
+---
+
+## Overview
+
+Wiki Documents are the core content units in Frappe Wiki. They use a nested set tree structure to organize pages and groups hierarchically within a Wiki Space. Each document can be either a page (with content) or a group (container for other documents).
+
+## Document Types
+
+### Pages
+
+Pages are leaf nodes in the tree that contain actual content written in Markdown.
+
+**Key Fields:**
+- `title` (required): Display name for the page
+- `slug`: URL-friendly identifier (auto-generated from title)
+- `doc_key`: Immutable UUID for stable identity across revisions
+- `content`: Markdown content
+- `route`: Full URL path (derived from tree position + slug)
+- `is_published`: Publishing status
+- `is_private`: Guest access restriction
+
+### Groups
+
+Groups are containers that organize pages and other groups into a hierarchical structure.
+
+**Key Fields:**
+- `title` (required): Display name for the group
+- `is_group`: Set to `1` to mark as group
+- `slug`: URL-friendly identifier
+- No content field (groups don't render as pages)
+
+### External Links
+
+Documents can also represent external links in your navigation:
+- `is_external_link`: Set to `1`
+- `external_url`: Target URL
+
+## Tree Structure
+
+Wiki Documents use the **Nested Set Model** for efficient hierarchical queries. This is implemented through the `NestedSet` base class from Frappe Framework.
+
+### Tree Fields
+
+**lft** and **rgt** (Left and Right)  
+Automatically managed by the nested set implementation. These enable efficient queries like:
+- Get all descendants
+- Get ancestors path
+- Reorder siblings
+
+**parent_wiki_document**  
+Direct link to parent document (null for root groups)
+
+**sort_order**  
+Integer controlling sibling order. Auto-assigned to place new documents at the end.
+
+<Note>
+The nested set model is maintained automatically. You don't need to manage `lft` and `rgt` values manually.
+</Note>
+
+## Creating Documents
+
+<Steps>
+  <Step title="Choose Parent Location">
+    Select a group to contain your new document, or create at root level
+  </Step>
+  
+  <Step title="Set Document Type">
+    Decide if creating a page (content) or group (container)
+  </Step>
+  
+  <Step title="Provide Required Fields">
+    - **Title**: Clear, descriptive name
+    - **Slug**: Auto-generated or custom
+    - **Content**: For pages only (Markdown)
+  </Step>
+  
+  <Step title="Configure Publishing">
+    - `is_published`: Make visible to users
+    - `is_private`: Require authentication
+  </Step>
+</Steps>
+
+### Automatic Field Generation
+
+**doc_key**  
+Automatically generated on creation using `frappe.generate_hash(length=12)`. This UUID is immutable and provides stable identity across the change request workflow.
+
+**slug**  
+Auto-generated from title if not provided:
+```python
+slug = frappe.website.utils.cleanup_page_name(self.title).replace("_", "-")
+```
+
+**route**  
+Derived from tree position and slug:
+1. Get Wiki Space route (e.g., `docs`)
+2. Add ancestor slugs (excluding root group)
+3. Add document slug
+4. Example: `docs/getting-started/installation`
+
+**sort_order**  
+For new documents, automatically set to `max(sibling_sort_orders) + 1`.
+
+<Accordion title="Route Calculation Example">
+Given this structure:
+```
+Wiki Space (route: "docs")
+└─ Root Group
+   └─ Getting Started (slug: "getting-started")
+      └─ Installation (slug: "installation")
+```
+
+The "Installation" page route becomes: `docs/getting-started/installation`
+
+See `wiki_document.py:163-206` for the complete implementation.
+</Accordion>
+
+## Content Management
+
+### Markdown Support
+
+All page content is written in Markdown and rendered using a custom renderer that supports:
+- Standard Markdown syntax
+- Table of contents generation
+- Code syntax highlighting
+- Custom directives (notes, warnings, etc.)
+
+### Boilerplate Content
+
+New pages without content automatically receive a starter template:
+```markdown
+Welcome to your new wiki page! Start editing this content to add information, images, and more.
+```
+
+### Attachments
+
+Wiki Documents support file attachments through Frappe's standard attachment system. The doctype configuration includes:
+```json
+"make_attachments_public": 1
+```
+
+This ensures uploaded files are publicly accessible when the page is published.
+
+## Publishing & Privacy
+
+### Publishing Status
+
+**is_published = 1**  
+Page is visible to all users (respecting privacy settings)
+
+**is_published = 0**  
+Page is only visible to authenticated users with Wiki permissions
+
+### Privacy Control
+
+**is_private = 0** (default)  
+Guest users can view if published
+
+**is_private = 1**  
+Requires authentication even if published
+
+<Warning>
+Attempting to access a private page as Guest throws `PermissionError` with message: "You must be logged in to view this page"
+</Warning>
+
+## Route Management
+
+### Unique Route Validation
+
+Leaf documents (pages) must have unique routes within the installation:
+```python
+filters = {
+    "route": self.route,
+    "is_group": 0,
+    "name": ("!=", self.name),
+}
+```
+
+Groups can share routes since they don't render as pages.
+
+### Leading Slash Handling
+
+Leading slashes are automatically removed from routes to ensure consistency:
+```python
+if self.route and self.route.startswith("/"):
+    self.route = self.route[1:len(self.route)]
+```
+
+## Tree Navigation
+
+### Get Ancestors
+
+Inherited from `NestedSet` class:
+```python
+ancestors = doc.get_ancestors()  # Returns list of ancestor names from parent to root
+```
+
+### Get Root Group
+
+Find the Wiki Space root for any document:
+```python
+root_group = doc.get_root_group()  # Returns root group name
+```
+
+### Get Wiki Space
+
+Retrieve the Wiki Space a document belongs to:
+```python
+wiki_space = doc.get_wiki_space()  # Returns dict with name, space_name, route
+```
+
+### Get Descendants
+
+Use Frappe's nested set utilities:
+```python
+from frappe.utils.nestedset import get_descendants_of
+descendants = get_descendants_of("Wiki Document", doc_name)
+```
+
+## Editing & Change Requests
+
+<Note>
+With the Change Request system enabled (Version 3), direct edits to Wiki Documents are discouraged. All changes should flow through the [Change Request](/features/change-requests) workflow for proper review and approval.
+</Note>
+
+### Edit Link Generation
+
+Get the edit URL for a document:
+```python
+edit_link = doc.get_edit_link()
+# Returns: /wiki/spaces/{space_name}/page/{doc_name}
+```
+
+## Permissions
+
+Wiki Document permissions mirror Wiki Space permissions:
+
+| Role | Create | Read | Write | Delete |
+|------|--------|------|-------|--------|
+| System Manager | ✓ | ✓ | ✓ | ✓ |
+| Wiki Manager | ✓ | ✓ | ✓ | ✓ |
+| Wiki User | - | ✓ | - | - |
+
+## Search Indexing
+
+Published, non-group, non-external pages are automatically indexed for full-text search:
+```python
+"filters": {"is_published": 1, "is_group": 0, "is_external_link": 0}
+```
+
+See [Search](/features/search) for details on search functionality.
+
+## Web Rendering
+
+Wiki Documents are rendered as web pages through:
+1. `WikiDocumentRenderer` - Custom renderer class
+2. `templates/wiki/document.html` - Jinja2 template
+3. `get_web_context()` - Context data method
+
+The renderer provides:
+- Breadcrumb navigation
+- Tree structure for sidebar
+- Rendered HTML from Markdown content
+- Edit links for authenticated users
+
+## Best Practices
+
+<Steps>
+  <Step title="Use Meaningful Slugs">
+    Create SEO-friendly, descriptive slugs that reflect page content
+  </Step>
+  
+  <Step title="Organize with Groups">
+    Use groups to create logical hierarchies rather than flat structures
+  </Step>
+  
+  <Step title="Leverage doc_key">
+    The immutable doc_key allows safe renaming and moving without breaking references
+  </Step>
+  
+  <Step title="Test Privacy Settings">
+    Verify guest access works as expected before publishing sensitive content
+  </Step>
+  
+  <Step title="Use sort_order Strategically">
+    Let it auto-assign for most cases, but manually set for critical ordering
+  </Step>
+</Steps>
+
+## Related Features
+
+- [Wiki Spaces](/features/wiki-spaces) - Organize documents into separate spaces
+- [Change Requests](/features/change-requests) - Edit documents through approval workflow
+- [Collaboration](/features/collaboration) - Work together on content
+- [Search](/features/search) - Find documents by content

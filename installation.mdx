@@ -1,0 +1,483 @@
+---
+title: Installation Guide
+description: Complete guide to installing Frappe Wiki locally or deploying on Frappe Cloud
+---
+
+## Installation Options
+
+Frappe Wiki can be installed in two ways:
+
+1. **Frappe Cloud** (Recommended) - Managed hosting with automatic updates
+2. **Local Development** - Self-hosted installation using Frappe Bench
+
+Choose the option that best fits your needs.
+
+<CardGroup cols={2}>
+  <Card title="Frappe Cloud" icon="cloud" href="#frappe-cloud-installation">
+    Quick setup with zero maintenance
+  </Card>
+  
+  <Card title="Local Installation" icon="server" href="#local-development-setup">
+    Full control with self-hosting
+  </Card>
+</CardGroup>
+
+---
+
+## Frappe Cloud Installation
+
+The fastest way to get started with Frappe Wiki is through Frappe Cloud, a managed hosting platform that handles all infrastructure, updates, and maintenance.
+
+### Why Choose Frappe Cloud?
+
+- ✅ **Zero Setup Time**: Install with one click
+- ✅ **Automatic Updates**: Always on the latest version
+- ✅ **Managed Infrastructure**: No server management required
+- ✅ **Automatic Backups**: Built-in backup and restore
+- ✅ **SSL Certificates**: HTTPS enabled by default
+- ✅ **Monitoring & Support**: 24/7 uptime monitoring
+
+### Installation Steps
+
+<Steps>
+  <Step title="Create Frappe Cloud Account">
+    1. Visit [frappecloud.com](https://frappecloud.com)
+    2. Sign up for a free account
+    3. Verify your email address
+    
+    <Note>
+      Frappe Cloud offers a free trial to test Frappe Wiki before committing.
+    </Note>
+  </Step>
+  
+  <Step title="Create a New Site">
+    1. From your Frappe Cloud dashboard, click **New Site**
+    2. Choose a subdomain (e.g., `mycompany.frappecloud.com`)
+    3. Select a region closest to your users
+    4. Choose your plan (shared, dedicated, or trial)
+    5. Click **Create Site**
+    
+    The site creation takes 2-5 minutes.
+  </Step>
+  
+  <Step title="Install Wiki App">
+    1. Navigate to the **Marketplace** in Frappe Cloud
+    2. Search for "Wiki"
+    3. Click **Install** on the Wiki app card
+    4. Select your site from the dropdown
+    5. Confirm the installation
+    
+    <CodeGroup>
+      ```bash Alternative: Bench Command
+      # If you have bench access to your cloud site
+      bench --site mysite.frappecloud.com install-app wiki
+      ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Access Your Wiki">
+    1. Once installed, log in to your site
+    2. Click the app switcher (grid icon)
+    3. Select **Wiki** to open the application
+    4. Start creating your first Wiki Space!
+  </Step>
+</Steps>
+
+### Custom Domain Setup
+
+To use your own domain with Frappe Cloud:
+
+1. Go to **Site Settings** in Frappe Cloud dashboard
+2. Click **Add Custom Domain**
+3. Enter your domain (e.g., `docs.yourcompany.com`)
+4. Update DNS records as instructed
+5. SSL certificate will be provisioned automatically
+
+<Note>
+  DNS propagation can take up to 48 hours, but usually completes within a few hours.
+</Note>
+
+---
+
+## Local Development Setup
+
+For self-hosting or development, install Frappe Wiki on your local machine or server using Frappe Bench.
+
+### System Requirements
+
+<Tabs>
+  <Tab title="Linux (Recommended)">
+    - **OS**: Ubuntu 20.04 LTS or later, Debian 11+
+    - **RAM**: Minimum 4GB (8GB recommended)
+    - **CPU**: 2+ cores
+    - **Storage**: 10GB+ free space
+    - **Python**: 3.10 or 3.11
+    - **Node.js**: 18.x or 20.x LTS
+    - **MariaDB**: 10.6+ or MySQL 8.0+
+    - **Redis**: 6.x or later
+  </Tab>
+  
+  <Tab title="macOS">
+    - **OS**: macOS 11 (Big Sur) or later
+    - **RAM**: Minimum 8GB
+    - **CPU**: 2+ cores
+    - **Python**: 3.10 or 3.11
+    - **Node.js**: 18.x or 20.x LTS
+    - **MariaDB**: 10.6+ (via Homebrew)
+    - **Redis**: 6.x+ (via Homebrew)
+    
+    <Warning>
+      macOS is suitable for development only. Use Linux for production deployments.
+    </Warning>
+  </Tab>
+  
+  <Tab title="Docker">
+    - **Docker**: 20.10+
+    - **Docker Compose**: 2.x
+    - **RAM**: Minimum 4GB allocated to Docker
+    - **Storage**: 10GB+ free space
+    
+    <Note>
+      Docker setup coming soon. Check the [official repository](https://github.com/frappe/wiki) for updates.
+    </Note>
+  </Tab>
+</Tabs>
+
+### Prerequisites
+
+Before installing Frappe Wiki, you need to set up Frappe Bench:
+
+<Steps>
+  <Step title="Install Frappe Bench">
+    Follow the official Frappe installation guide:
+    
+    ```bash
+    # Install bench using the easy install script (Ubuntu/Debian)
+    sudo python3 -c "$(curl -fsSL https://raw.githubusercontent.com/frappe/bench/develop/install.py)" \
+      --production --user frappe
+    ```
+    
+    Or visit the complete guide: [frappeframework.com/docs/user/en/installation](https://frappeframework.com/docs/user/en/installation)
+    
+    <Warning>
+      Make sure all system dependencies are installed before running the bench installation.
+    </Warning>
+  </Step>
+  
+  <Step title="Create a New Site">
+    After bench is installed, create a new site:
+    
+    ```bash
+    # Navigate to your bench directory
+    cd frappe-bench
+    
+    # Create a new site
+    bench new-site mysite.local
+    
+    # You'll be prompted to set the MySQL root password
+    # and an administrator password for the site
+    ```
+    
+    <CodeGroup>
+      ```bash With Custom Database
+      # Create site with specific database name
+      bench new-site mysite.local --db-name wiki_db
+      ```
+      
+      ```bash With Admin Password
+      # Create site with predefined admin password
+      bench new-site mysite.local --admin-password strongpassword123
+      ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Install Wiki App">
+    Now install the Frappe Wiki app:
+    
+    ```bash
+    # Get the Wiki app from GitHub
+    bench get-app https://github.com/frappe/wiki
+    
+    # Install Wiki on your site
+    bench --site mysite.local install-app wiki
+    ```
+    
+    The installation process will:
+    - Download the Wiki app and its dependencies
+    - Install Python packages
+    - Build frontend assets (Vue.js SPA)
+    - Set up database schema
+    - Create default Wiki User role
+  </Step>
+  
+  <Step title="Start the Development Server">
+    Start the bench server:
+    
+    ```bash
+    # Start all services
+    bench start
+    ```
+    
+    This starts multiple processes:
+    - **Web Server**: Port 8000 (Frappe backend)
+    - **Socket.IO**: Port 9000 (real-time updates)
+    - **Redis**: Caching and queues
+    - **Worker**: Background jobs
+    
+    <Note>
+      Use `bench start` for development. For production, use `bench setup production`.
+    </Note>
+  </Step>
+  
+  <Step title="Access Your Wiki">
+    Open your browser and navigate to:
+    
+    ```
+    http://mysite.local:8000
+    ```
+    
+    Log in with:
+    - **Username**: Administrator
+    - **Password**: The password you set during site creation
+    
+    Click the app switcher and select **Wiki** to get started!
+  </Step>
+</Steps>
+
+### Building Frontend Assets
+
+The Wiki frontend is a Vue.js SPA that needs to be built:
+
+```bash
+# Navigate to the frontend directory
+cd apps/wiki/frontend
+
+# Install dependencies
+yarn install
+# or
+npm install
+
+# Build for production
+yarn build
+# or
+npm run build
+```
+
+<Tabs>
+  <Tab title="Development Mode">
+    For frontend development with hot reload:
+    
+    ```bash
+    cd apps/wiki/frontend
+    yarn dev
+    ```
+    
+    This starts Vite dev server with hot module replacement.
+  </Tab>
+  
+  <Tab title="Production Build">
+    For production deployment:
+    
+    ```bash
+    cd apps/wiki/frontend
+    yarn build
+    ```
+    
+    Built assets are copied to `wiki/public/frontend/`.
+  </Tab>
+</Tabs>
+
+### Configuration
+
+#### Search Setup (Optional but Recommended)
+
+Frappe Wiki supports two search backends:
+
+<Tabs>
+  <Tab title="RedisSearch (Recommended)">
+    For production sites with 100+ pages:
+    
+    ```bash
+    # Install RedisSearch module
+    # Ubuntu/Debian
+    sudo apt-get install redis-redisearch
+    
+    # Or build from source
+    git clone https://github.com/RediSearch/RediSearch.git
+    cd RediSearch
+    make setup
+    make build
+    ```
+    
+    Enable in `site_config.json`:
+    
+    ```json
+    {
+      "redis_search_enabled": true
+    }
+    ```
+    
+    <Note>
+      RedisSearch provides significantly faster search for large wikis.
+    </Note>
+  </Tab>
+  
+  <Tab title="SQLite Search (Default)">
+    SQLite-based search is enabled by default:
+    
+    - No additional configuration needed
+    - Works out of the box
+    - Suitable for small to medium wikis (under 100 pages)
+    - No external dependencies
+    
+    The search index is automatically maintained.
+  </Tab>
+</Tabs>
+
+#### Wiki Settings
+
+Configure Wiki behavior through **Wiki Settings** DocType:
+
+1. Navigate to **Wiki Settings** in desk
+2. Configure:
+   - Default permissions
+   - Custom scripts
+   - Navbar items
+   - App switcher options
+
+### Production Deployment
+
+For production deployment on Ubuntu/Debian:
+
+<Steps>
+  <Step title="Setup Production">
+    ```bash
+    # Setup production environment
+    sudo bench setup production frappe
+    ```
+    
+    This configures:
+    - Nginx as reverse proxy
+    - Supervisor for process management
+    - SSL certificate via Let's Encrypt (optional)
+  </Step>
+  
+  <Step title="Enable Site">
+    ```bash
+    # Enable site in production
+    bench --site mysite.local enable-scheduler
+    bench --site mysite.local set-maintenance-mode off
+    ```
+  </Step>
+  
+  <Step title="Setup SSL (Optional)">
+    ```bash
+    # Setup Let's Encrypt SSL
+    sudo bench setup lets-encrypt mysite.local
+    ```
+    
+    <Warning>
+      Ensure your domain DNS is properly configured before running Let's Encrypt.
+    </Warning>
+  </Step>
+  
+  <Step title="Setup Backups">
+    ```bash
+    # Enable automatic daily backups
+    bench --site mysite.local scheduler enable
+    ```
+    
+    Backups are stored in `sites/mysite.local/private/backups/`
+  </Step>
+</Steps>
+
+### Updating Frappe Wiki
+
+Keep your installation up to date:
+
+```bash
+# Update bench and all apps
+bench update
+
+# Update only Wiki app
+bench update --apps wiki
+
+# Update and rebuild assets
+bench update --build
+```
+
+<Warning>
+  Always backup your site before updating: `bench --site mysite.local backup`
+</Warning>
+
+## Troubleshooting
+
+### Common Issues
+
+<Accordion title="Port 8000 already in use">
+  Another application is using port 8000. Change the port:
+  
+  ```bash
+  bench set-config http_port 8080
+  bench start
+  ```
+</Accordion>
+
+<Accordion title="Frontend assets not loading">
+  Rebuild the frontend:
+  
+  ```bash
+  cd apps/wiki/frontend
+  yarn install
+  yarn build
+  bench build --app wiki
+  ```
+</Accordion>
+
+<Accordion title="Database connection errors">
+  Check MariaDB is running:
+  
+  ```bash
+  sudo systemctl status mariadb
+  sudo systemctl start mariadb
+  ```
+  
+  Verify credentials in `sites/mysite.local/site_config.json`.
+</Accordion>
+
+<Accordion title="Permission denied errors">
+  Ensure proper file ownership:
+  
+  ```bash
+  sudo chown -R $USER:$USER frappe-bench
+  ```
+</Accordion>
+
+### Getting Help
+
+If you encounter issues:
+
+- **Documentation**: [frappeframework.com/docs](https://frappeframework.com/docs)
+- **Forum**: [discuss.frappe.io/c/wiki/72](https://discuss.frappe.io/c/wiki/72)
+- **Telegram**: [t.me/frappewiki](https://t.me/frappewiki)
+- **GitHub Issues**: [github.com/frappe/wiki/issues](https://github.com/frappe/wiki/issues)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Create your first wiki page and space
+  </Card>
+  
+  <Card title="Configuration" icon="gear" href="/deployment/settings">
+    Customize branding and behavior
+  </Card>
+  
+  <Card title="User Guide" icon="users" href="/guides/creating-content">
+    Set up users and permissions
+  </Card>
+  
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Integrate Wiki with your applications
+  </Card>
+</CardGroup>

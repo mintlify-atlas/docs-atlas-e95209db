@@ -1,0 +1,554 @@
+---
+title: Frontend Architecture
+description: Vue.js SPA architecture and component structure
+---
+
+The Frappe Wiki frontend is a modern single-page application built with Vue 3, providing an interactive interface for document editing and wiki management.
+
+## Technology Stack
+
+### Core Framework
+
+- **Vue 3** - Progressive JavaScript framework with Composition API
+- **Vue Router** - Client-side routing
+- **Pinia** - State management
+- **Vite** - Build tool and dev server
+
+### UI Layer
+
+- **Frappe UI** - Component library and utilities
+  - Pre-built components (Button, Input, Dialog, etc.)
+  - Resource management (`resourcesPlugin`)
+  - Request handling (`frappeRequest`)
+  - Page metadata (`pageMetaPlugin`)
+
+### Rich Text Editing
+
+- **TipTap** - ProseMirror-based rich text editor
+- Custom extensions for Wiki-specific functionality
+
+## Project Structure
+
+```
+frontend/
+├── src/
+│   ├── main.js              # Application entry point
+│   ├── App.vue              # Root component
+│   ├── router.js            # Route configuration
+│   ├── socket.js            # WebSocket setup
+│   ├── translation.js       # i18n plugin
+│   ├── index.css            # Global styles
+│   │
+│   ├── pages/               # Route-level components
+│   │   ├── Spaces.vue       # Space list page
+│   │   ├── SpaceDetails.vue # Space detail with nested routes
+│   │   ├── Contributions.vue # Change request list
+│   │   └── ContributionReview.vue # Change request review
+│   │
+│   ├── components/          # Reusable components
+│   │   ├── Sidebar.vue
+│   │   ├── WikiEditor.vue
+│   │   ├── WikiDocumentPanel.vue
+│   │   ├── DraftContributionPanel.vue
+│   │   ├── ContributionBanner.vue
+│   │   ├── DiffViewer.vue
+│   │   ├── NestedDraggable.vue
+│   │   ├── SpaceList.vue
+│   │   ├── SpaceWelcome.vue
+│   │   ├── WikiBreadcrumbs.vue
+│   │   ├── WikiDocumentList.vue
+│   │   ├── WikiDocumentSettings.vue
+│   │   └── tiptap-extensions/ # TipTap editor extensions
+│   │
+│   ├── composables/         # Vue composables
+│   │   ├── useChangeTypeDisplay.js
+│   │   ├── useSidebarResize.js
+│   │   └── useTreeDialogs.js
+│   │
+│   ├── stores/              # Pinia stores
+│   │   ├── index.js         # Store setup
+│   │   ├── session.js       # Session management
+│   │   ├── user.js          # User data
+│   │   └── changeRequest.js # Change request state
+│   │
+│   └── layouts/
+│       └── MainLayout.vue   # Application layout
+│
+├── package.json
+├── vite.config.js
+└── tailwind.config.js
+```
+
+## Application Bootstrap
+
+### Entry Point (`main.js`)
+
+```javascript
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
+import { initSocket } from './socket';
+import { pinia } from './stores';
+import translationPlugin from './translation';
+import {
+  resourcesPlugin,
+  pageMetaPlugin,
+  setConfig,
+  frappeRequest
+} from 'frappe-ui';
+
+const app = createApp(App);
+
+// Configure Frappe UI resource fetcher
+setConfig('resourceFetcher', frappeRequest);
+
+// Install plugins
+app.use(pinia);
+app.use(router);
+app.use(translationPlugin);
+app.use(resourcesPlugin);
+app.use(pageMetaPlugin);
+
+// Initialize WebSocket
+const socket = initSocket();
+app.config.globalProperties.$socket = socket;
+
+// Register global components
+app.component('Button', Button);
+app.component('TextInput', TextInput);
+// ... more global components
+
+app.mount('#app');
+```
+
+### Root Component (`App.vue`)
+
+```vue
+<script setup>
+import { FrappeUIProvider, setConfig } from "frappe-ui";
+import MainLayout from "./layouts/MainLayout.vue";
+
+setConfig("systemTimezone", window.timezone?.system || null);
+setConfig("localTimezone", window.timezone?.user || null);
+</script>
+
+<template>
+  <FrappeUIProvider>
+    <MainLayout>
+      <router-view />
+    </MainLayout>
+  </FrappeUIProvider>
+</template>
+```
+
+**Key Features:**
+- `FrappeUIProvider` wraps the entire app for Frappe UI context
+- `MainLayout` provides consistent layout structure
+- `router-view` renders current route component
+
+## Routing Architecture
+
+### Route Configuration
+
+```javascript
+const routes = [
+  {
+    path: '/',
+    redirect: '/spaces',
+  },
+  {
+    path: '/spaces',
+    name: 'SpaceList',
+    component: () => import('@/pages/Spaces.vue'),
+  },
+  {
+    path: '/spaces/:spaceId',
+    component: () => import('@/pages/SpaceDetails.vue'),
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'SpaceDetails',
+        component: () => import('@/components/SpaceWelcome.vue'),
+      },
+      {
+        path: 'page/:pageId',
+        name: 'SpacePage',
+        component: () => import('@/components/WikiDocumentPanel.vue'),
+        props: true,
+      },
+      {
+        path: 'draft/:docKey',
+        name: 'DraftChangeRequest',
+        component: () => import('@/components/DraftContributionPanel.vue'),
+        props: true,
+      },
+    ],
+  },
+  {
+    path: '/change-requests',
+    name: 'ChangeRequests',
+    component: () => import('@/pages/Contributions.vue'),
+  },
+  {
+    path: '/change-requests/:changeRequestId',
+    name: 'ChangeRequestReview',
+    component: () => import('@/pages/ContributionReview.vue'),
+    props: true,
+  },
+];
+
+const router = createRouter({
+  history: createWebHistory('/wiki'),
+  routes,
+});
+```
+
+**Base Path:** All routes are under `/wiki` path.
+
+### Authentication Guard
+
+```javascript
+router.beforeEach(async (to, from, next) => {
+  const sessionStore = useSessionStore();
+  const userStore = useUserStore();
+  
+  let isLoggedIn = sessionStore.isLoggedIn;
+  
+  try {
+    if (!userStore.data) {
+      await userStore.fetch();
+    }
+  } catch (error) {
+    isLoggedIn = false;
+  }
+  
+  if (!isLoggedIn) {
+    window.location.href = `/login?redirect-to=/wiki/${encodeURIComponent(to.fullPath)}`;
+  } else {
+    next();
+  }
+});
+```
+
+## State Management (Pinia)
+
+### Session Store (`stores/session.js`)
+
+**Purpose:** Manage user authentication state.
+
+**State:**
+- `isLoggedIn` - Authentication status
+- `user` - Current user information
+
+**Actions:**
+- `checkAuth()` - Verify authentication
+- `logout()` - End session
+
+### User Store (`stores/user.js`)
+
+**Purpose:** Manage user profile data.
+
+**State:**
+- `data` - User profile object
+
+**Actions:**
+- `fetch()` - Load user data from API
+
+### Change Request Store (`stores/changeRequest.js`)
+
+**Purpose:** Manage active change request state.
+
+**State:**
+- `currentRequest` - Active change request data
+- `conflicts` - Merge conflicts
+- `reviewers` - Assigned reviewers
+
+**Actions:**
+- `load(id)` - Load change request
+- `save()` - Save changes
+- `submit()` - Submit for review
+- `approve()` - Approve changes
+- `merge()` - Merge to main
+
+## Key Components
+
+### WikiEditor Component
+
+**Purpose:** Rich text editor for wiki content.
+
+**Features:**
+- TipTap-based Markdown editor
+- Custom toolbar with formatting options
+- Bubble menu for inline formatting
+- Slash commands for quick insertions
+- Image and video embedding
+- Code block with syntax highlighting
+- Callout blocks
+- Link management
+
+**TipTap Extensions:**
+- `code-block-extension.js` - Code blocks with language selection
+- `image-extension.js` - Image upload and display
+- `video-block.js` - Video embedding
+- `callout-block.js` - Info/warning/success callouts
+- `link-extension.js` - Link insertion and editing
+- `slash-commands.js` - Command palette
+
+**Custom Components:**
+- `WikiToolbar.vue` - Editor toolbar
+- `WikiBubbleMenu.vue` - Floating formatting menu
+- `SlashCommandsList.vue` - Command suggestions
+- `CodeBlockView.vue` - Code block renderer
+- `ImageNodeView.vue` - Image node renderer
+- `VideoBlockView.vue` - Video node renderer
+- `CalloutBlockView.vue` - Callout block renderer
+
+### WikiDocumentPanel Component
+
+**Purpose:** Display and edit individual wiki documents.
+
+**Features:**
+- Document viewing and editing
+- Metadata editing (title, slug, route)
+- Publishing controls
+- Version history
+- Breadcrumb navigation
+
+### DraftContributionPanel Component
+
+**Purpose:** Create and edit draft change requests.
+
+**Features:**
+- Draft document editing
+- Change request metadata
+- Reviewer assignment
+- Submit for review
+
+### Sidebar Component
+
+**Purpose:** Collapsible navigation sidebar.
+
+**Features:**
+- Hierarchical document tree
+- Drag-and-drop reordering (NestedDraggable)
+- Create/delete/move operations
+- Resize handle
+- Collapse/expand groups
+
+### DiffViewer Component
+
+**Purpose:** Display document changes in change requests.
+
+**Features:**
+- Side-by-side or unified diff view
+- Syntax highlighting for code
+- Line-by-line comparison
+- Conflict highlighting
+
+### NestedDraggable Component
+
+**Purpose:** Drag-and-drop tree structure.
+
+**Features:**
+- Nested drag-and-drop
+- Visual feedback during drag
+- Drop validation
+- Tree reordering
+
+## Composables
+
+### useChangeTypeDisplay
+
+**Purpose:** Format change types for display.
+
+**Returns:**
+- `formatChangeType(type)` - Human-readable change type
+- `getChangeIcon(type)` - Icon for change type
+
+### useSidebarResize
+
+**Purpose:** Handle sidebar resize interactions.
+
+**Returns:**
+- `width` - Current sidebar width
+- `startResize()` - Begin resize operation
+- `resize(event)` - Handle resize drag
+- `endResize()` - End resize operation
+
+### useTreeDialogs
+
+**Purpose:** Manage tree operation dialogs (create/move/delete).
+
+**Returns:**
+- `showCreateDialog` - Create document dialog state
+- `showMoveDialog` - Move document dialog state
+- `showDeleteDialog` - Delete confirmation state
+- `openCreateDialog()` - Open create dialog
+- `openMoveDialog()` - Open move dialog
+- `confirmDelete()` - Show delete confirmation
+
+## Data Fetching with Frappe UI
+
+### Resource Pattern
+
+Frappe UI provides a `createResource` utility for API interactions:
+
+```javascript
+import { createResource } from 'frappe-ui';
+
+const wikiSpaces = createResource({
+  url: 'wiki.api.get_spaces',
+  auto: true, // Fetch on mount
+  transform: (data) => {
+    // Transform response data
+    return data.map(space => ({
+      ...space,
+      route: `/wiki/spaces/${space.name}`
+    }));
+  },
+});
+
+// In component
+watch(() => wikiSpaces.data, (spaces) => {
+  console.log('Spaces loaded:', spaces);
+});
+
+// Manual fetch
+await wikiSpaces.fetch();
+
+// Reload
+await wikiSpaces.reload();
+```
+
+**Features:**
+- Automatic loading states
+- Error handling
+- Caching
+- Request deduplication
+- Transform pipeline
+
+## Real-Time Features
+
+### Socket.io Integration
+
+**Purpose:** Real-time updates for collaborative editing.
+
+**Events:**
+- `doc_update` - Document changed by another user
+- `doc_delete` - Document deleted
+- `doc_move` - Document moved in tree
+- `change_request_update` - Change request status changed
+
+**Usage:**
+```javascript
+const socket = inject('$socket');
+
+socket.on('doc_update', (data) => {
+  // Refresh document view
+  reloadDocument(data.doc_key);
+});
+```
+
+## Build and Deployment
+
+### Build Process
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+**Output:** `frontend/dist/` containing:
+- `index.html` - Entry HTML
+- `assets/` - JS, CSS, and asset bundles
+
+### Integration with Backend
+
+**Entry Point:** `wiki/www/wiki.html`
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wiki</title>
+  <link rel="stylesheet" href="{{ frappe.get_url('/assets/wiki/frontend/assets/index.css') }}">
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    window.boot = {{ boot | tojson }};
+    window.timezone = {
+      system: "{{ boot.system_timezone }}",
+      user: "{{ boot.user_timezone }}"
+    };
+  </script>
+  <script type="module" src="{{ frappe.get_url('/assets/wiki/frontend/assets/index.js') }}"></script>
+</body>
+</html>
+```
+
+**Boot Context:** Provided by `wiki/www/wiki.py`
+
+```python
+def get_boot():
+    return frappe._dict({
+        "frappe_version": frappe.__version__,
+        "site_name": frappe.local.site,
+        "read_only_mode": frappe.flags.read_only,
+        "system_timezone": get_system_timezone(),
+    })
+```
+
+## Styling
+
+### Tailwind CSS
+
+The application uses Tailwind CSS for styling:
+
+- Utility-first CSS framework
+- Configured in `tailwind.config.js`
+- Custom theme extensions for Wiki branding
+- Dark mode support
+
+### Frappe UI Themes
+
+Inherits Frappe UI design system:
+- Consistent component styling
+- Design tokens for colors, spacing, typography
+- Automatic dark mode switching
+
+## Development Workflow
+
+### Local Development
+
+```bash
+# Terminal 1: Backend
+cd ~/frappe-bench
+bench start
+
+# Terminal 2: Frontend
+cd ~/frappe-bench/apps/wiki/frontend
+npm run dev
+```
+
+**Dev Server:** `http://localhost:5173` (proxies to Frappe backend)
+
+### Hot Module Replacement
+
+Vite provides HMR for fast development:
+- Component changes reflect instantly
+- State preserved across updates
+- CSS updates without page reload
+
+## Component Count
+
+- **Total Vue Components:** 27
+- **Pages:** 4
+- **Reusable Components:** 13
+- **TipTap Extensions:** 16 (9 Vue components + 7 JS modules)
+- **Composables:** 3
+- **Stores:** 4

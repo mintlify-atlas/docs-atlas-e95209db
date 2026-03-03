@@ -1,0 +1,553 @@
+---
+title: Markdown Editor Features
+description: Complete guide to markdown formatting and editor capabilities
+---
+
+Frappe Wiki uses a powerful TipTap-based markdown editor that combines the simplicity of markdown with the convenience of WYSIWYG editing. This guide covers all supported markdown features and editor capabilities.
+
+## Editor Overview
+
+The wiki editor provides:
+
+- **Real-time rendering**: See formatted text as you type
+- **Markdown compatibility**: Content is stored as markdown and can be edited as plain text
+- **Syntax highlighting**: Over 30 programming languages supported in code blocks
+- **Visual editing**: Format text using toolbar buttons or keyboard shortcuts
+- **Auto-save**: Changes saved automatically every 10 seconds
+
+## Text Formatting
+
+### Basic Formatting
+
+Style text using toolbar buttons or markdown syntax:
+
+<CodeGroup>
+```markdown Bold and Italic
+**Bold text** or __bold text__
+*Italic text* or _italic text_
+***Bold and italic***
+~~Strikethrough text~~
+`Inline code`
+```
+</CodeGroup>
+
+**Keyboard Shortcuts:**
+- Bold: `Cmd/Ctrl + B`
+- Italic: `Cmd/Ctrl + I`
+- Strikethrough: No default shortcut (use toolbar)
+- Inline code: No default shortcut (use toolbar or backticks)
+
+### Headings
+
+Create document structure with six heading levels:
+
+<CodeGroup>
+```markdown Heading Syntax
+# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+##### Heading 5
+###### Heading 6
+```
+</CodeGroup>
+
+**Using the Editor:**
+1. Click the headings dropdown (shows current style)
+2. Select the desired heading level
+3. Or type `/heading` to use slash commands
+
+<Note>
+Headings create a table of contents structure. Use H2 (##) for main sections and H3-H4 for subsections.
+</Note>
+
+## Lists
+
+### Bullet Lists
+
+Create unordered lists:
+
+<CodeGroup>
+```markdown Bullet List
+- First item
+- Second item
+  - Nested item
+  - Another nested item
+- Third item
+```
+</CodeGroup>
+
+**In the Editor:**
+- Click the bullet list button or type `-` followed by space
+- Press `Tab` to indent (nest)
+- Press `Shift + Tab` to outdent
+- Press `Enter` twice to exit the list
+
+### Numbered Lists
+
+Create ordered lists with automatic numbering:
+
+<CodeGroup>
+```markdown Numbered List
+1. First item
+2. Second item
+   1. Nested item
+   2. Another nested item
+3. Third item
+```
+</CodeGroup>
+
+**In the Editor:**
+- Click the numbered list button or type `1.` followed by space
+- Numbering updates automatically
+- Use Tab/Shift+Tab for nesting
+
+### Task Lists
+
+Create interactive checklists:
+
+<CodeGroup>
+```markdown Task List
+- [ ] Incomplete task
+- [x] Completed task
+- [ ] Another task
+  - [ ] Nested task
+```
+</CodeGroup>
+
+**In the Editor:**
+- Click the task list button or type `/task`
+- Click checkboxes to toggle completion
+- Perfect for checklists, requirements, and progress tracking
+
+## Links
+
+### Creating Links
+
+Add hyperlinks to your content:
+
+<CodeGroup>
+```markdown Link Syntax
+[Link text](https://example.com)
+[Link with title](https://example.com "Tooltip text")
+```
+</CodeGroup>
+
+**Using the Link Dialog:**
+
+<Steps>
+  <Step title="Trigger Link Dialog">
+    Select text and press `Cmd/Ctrl + K`, or click the link button in the toolbar.
+  </Step>
+  <Step title="Enter URL">
+    Type or paste the URL in the dialog.
+  </Step>
+  <Step title="Save">
+    Press Enter or click Save to create the link.
+  </Step>
+</Steps>
+
+### Editing Links
+
+Click on any link in the editor to:
+- Edit the URL
+- Remove the link
+- Open the link in a new tab
+
+### Internal Links
+
+Link to other pages in your wiki using relative or absolute paths:
+
+```markdown
+[Getting Started](/docs/getting-started)
+[Configuration](./configuration)
+```
+
+## Images
+
+### Inserting Images
+
+Add images through multiple methods:
+
+<Tabs>
+  <Tab title="Upload">
+    <Steps>
+      <Step>Click the image button in the toolbar</Step>
+      <Step>Select an image file</Step>
+      <Step>Image is uploaded and inserted automatically</Step>
+    </Steps>
+  </Tab>
+  <Tab title="Drag & Drop">
+    Drag image files from your computer directly into the editor at the desired location.
+  </Tab>
+  <Tab title="Paste">
+    Copy an image to clipboard and paste (`Cmd/Ctrl + V`) into the editor.
+  </Tab>
+  <Tab title="Markdown">
+    ```markdown
+    ![Alt text](image-url.jpg)
+    ```
+  </Tab>
+</Tabs>
+
+### Image Captions
+
+Add captions to images using italics directly after the image:
+
+<CodeGroup>
+```markdown Image with Caption
+![Product screenshot](screenshot.png)
+*Figure 1: Dashboard overview showing key metrics*
+```
+</CodeGroup>
+
+The italic text immediately following an image is styled as a caption.
+
+### Image Sizing
+
+Images are responsive and scale to fit the content width. For manual control, edit the markdown to add width attributes:
+
+```markdown
+<img src="image.jpg" alt="Description" width="400" />
+```
+
+## Code
+
+### Inline Code
+
+Highlight code or technical terms inline:
+
+<CodeGroup>
+```markdown Inline Code
+Use the `console.log()` function to print output.
+The `config.yaml` file contains settings.
+```
+</CodeGroup>
+
+### Code Blocks
+
+Insert multi-line code with syntax highlighting:
+
+<CodeGroup>
+```markdown Code Block
+```javascript
+function greet(name) {
+  console.log(`Hello, ${name}!`);
+}
+```
+```
+</CodeGroup>
+
+**Using the Editor:**
+
+<Steps>
+  <Step title="Insert Block">
+    Click the code block button or type `/code` and select **Code Block**.
+  </Step>
+  <Step title="Select Language">
+    Click the language dropdown in the top-right corner of the code block.
+  </Step>
+  <Step title="Write Code">
+    Type or paste your code. Syntax highlighting applies automatically.
+  </Step>
+</Steps>
+
+**Supported Languages:**
+- JavaScript, TypeScript, Python, Java, C, C++, C#
+- Go, Rust, Ruby, PHP, Swift, Kotlin
+- HTML, CSS, SCSS, SQL, YAML, JSON, XML
+- Shell/Bash, PowerShell, Dockerfile
+- And 15+ more languages
+
+<Info>
+Code blocks preserve indentation and formatting exactly as entered.
+</Info>
+
+## Tables
+
+### Creating Tables
+
+Insert tables visually:
+
+<Steps>
+  <Step title="Insert Table">
+    Click the **Table** dropdown in the toolbar and select dimensions, or type `/table` for a default 3x3 table.
+  </Step>
+  <Step title="Edit Content">
+    Click cells to edit. Use Tab to move between cells.
+  </Step>
+  <Step title="Modify Structure">
+    Right-click any cell to:
+    - Insert/delete rows and columns
+    - Merge cells
+    - Set header row
+  </Step>
+</Steps>
+
+### Table Features
+
+- **Resizable columns**: Drag column borders to adjust width
+- **Header row**: First row is automatically styled as a header
+- **Cell selection**: Click and drag to select multiple cells
+- **Keyboard navigation**: Use Tab, Shift+Tab, and arrow keys
+
+### Markdown Table Syntax
+
+<CodeGroup>
+```markdown Table
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
+```
+</CodeGroup>
+
+## Blockquotes
+
+Emphasize quotations or important text:
+
+<CodeGroup>
+```markdown Blockquote
+> This is a blockquote.
+> It can span multiple lines.
+>
+> And multiple paragraphs.
+```
+</CodeGroup>
+
+**In the Editor:**
+- Click the blockquote button
+- Or type `>` followed by space at the start of a line
+
+## Horizontal Rules
+
+Add visual separators:
+
+<CodeGroup>
+```markdown Horizontal Rule
+Text above the line
+
+---
+
+Text below the line
+```
+</CodeGroup>
+
+**In the Editor:**
+- Click the horizontal rule button (—)
+- Or type `---` on a new line
+
+## Callouts
+
+Highlight important information with styled callout blocks:
+
+### Callout Types
+
+**Note Callout** (Information)
+```markdown
+Type: /note or select "Note Callout" from slash commands
+Use for: General information and tips
+```
+
+**Tip Callout** (Helpful Suggestions)  
+```markdown
+Type: /tip or select "Tip Callout"
+Use for: Best practices and recommendations
+```
+
+**Warning Callout** (Caution)
+```markdown
+Type: /warn or select "Warning Callout"
+Use for: Important warnings and potential issues
+```
+
+**Danger Callout** (Critical)
+```markdown
+Type: /danger or select "Danger Callout"
+Use for: Critical warnings and destructive actions
+```
+
+### Using Callouts
+
+<Steps>
+  <Step title="Insert Callout">
+    Type `/` and search for the callout type, or select from the slash commands menu.
+  </Step>
+  <Step title="Add Content">
+    Click inside the callout to add your message. You can use formatting, links, and lists.
+  </Step>
+  <Step title="Customize">
+    Edit the title field if the callout type supports custom titles.
+  </Step>
+</Steps>
+
+## Videos
+
+Embed video content directly:
+
+<Steps>
+  <Step title="Upload Video">
+    Click the video button in the toolbar or type `/video`.
+  </Step>
+  <Step title="Select File">
+    Choose a video file from your computer.
+  </Step>
+  <Step title="Wait for Upload">
+    The video uploads and embeds automatically.
+  </Step>
+</Steps>
+
+**Supported Formats:**
+- MP4 (H.264)
+- WebM
+- Ogg
+
+<Info>
+For YouTube or Vimeo videos, use standard embedding techniques or markdown link syntax.
+</Info>
+
+## Keyboard Shortcuts
+
+### Formatting Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd/Ctrl + B` | Bold |
+| `Cmd/Ctrl + I` | Italic |
+| `Cmd/Ctrl + K` | Insert/edit link |
+| `Cmd/Ctrl + Z` | Undo |
+| `Cmd/Ctrl + Shift + Z` | Redo |
+| `Cmd/Ctrl + S` | Save draft |
+| `Tab` | Indent list item |
+| `Shift + Tab` | Outdent list item |
+| `Enter` (in list) | New list item |
+| `Enter` twice (in list) | Exit list |
+
+### Markdown Shortcuts
+
+Type these at the start of a line for quick formatting:
+
+| Type | Result |
+|------|--------|
+| `#` + space | Heading 1 |
+| `##` + space | Heading 2 |
+| `###` + space | Heading 3 |
+| `-` + space | Bullet list |
+| `1.` + space | Numbered list |
+| `>` + space | Blockquote |
+| ``` + space | Code block |
+| `---` | Horizontal rule |
+| `/` | Slash commands menu |
+
+## Slash Commands
+
+Access all formatting options via the slash commands menu:
+
+### Using Slash Commands
+
+<Steps>
+  <Step title="Trigger Menu">
+    Type `/` anywhere in the editor.
+  </Step>
+  <Step title="Filter Commands">
+    Continue typing to filter (e.g., `/table`, `/img`).
+  </Step>
+  <Step title="Select Command">
+    Use arrow keys to navigate and Enter to select, or click with mouse.
+  </Step>
+</Steps>
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `/heading1` | Insert H1 heading |
+| `/heading2` | Insert H2 heading |
+| `/heading3` | Insert H3 heading |
+| `/bullet` | Create bullet list |
+| `/number` | Create numbered list |
+| `/task` | Create task list |
+| `/code` | Insert code block |
+| `/quote` | Insert blockquote |
+| `/hr` | Insert horizontal rule |
+| `/table` | Insert 3x3 table |
+| `/image` | Upload image |
+| `/video` | Upload video |
+| `/note` | Note callout |
+| `/tip` | Tip callout |
+| `/warn` | Warning callout |
+| `/danger` | Danger callout |
+
+## Special Features
+
+### Paste Handling
+
+**Plain Text:** Pasting text preserves basic formatting and converts to markdown.
+
+**Images:** Pasting images from clipboard uploads and embeds them automatically.
+
+**HTML:** Rich content from web pages is converted to markdown-compatible formatting.
+
+### Drag and Drop
+
+- **Images**: Drag image files into the editor to upload
+- **Videos**: Drag video files to upload and embed
+- **Text**: Drag to reorder content blocks
+
+### Auto-save
+
+- Changes save automatically 10 seconds after you stop typing
+- Draft status updates in real-time
+- Manual save available with `Cmd/Ctrl + S`
+
+### Blank Lines
+
+The editor preserves multiple consecutive blank lines, maintaining your document spacing exactly as you format it.
+
+## Markdown Compatibility
+
+Frappe Wiki stores content as standard markdown:
+
+- **Export**: Content can be exported as `.md` files
+- **Import**: Standard markdown files can be imported
+- **Git-friendly**: Changes show cleanly in version control
+- **Portable**: Use content in other markdown-compatible systems
+
+### Supported Markdown Extensions
+
+- GitHub Flavored Markdown (GFM)
+- Task lists
+- Tables
+- Strikethrough
+- Auto-linking
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Semantic Headings">
+    Structure content with H2 for main sections, H3 for subsections, and avoid skipping levels.
+  </Accordion>
+  <Accordion title="Add Alt Text to Images">
+    Always include descriptive alt text for accessibility and SEO.
+  </Accordion>
+  <Accordion title="Format Code Properly">
+    Use code blocks for multi-line code and inline code for single keywords or short snippets.
+  </Accordion>
+  <Accordion title="Limit Table Complexity">
+    Keep tables simple and readable. For complex data, consider breaking into multiple tables.
+  </Accordion>
+  <Accordion title="Use Callouts Sparingly">
+    Highlight only the most important information. Too many callouts reduce their impact.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Creating Content" icon="pen-to-square" href="/guides/creating-content">
+    Learn how to create and edit wiki pages
+  </Card>
+  <Card title="Review Workflow" icon="code-pull-request" href="/guides/review-workflow">
+    Understand the review and approval process
+  </Card>
+</CardGroup>
