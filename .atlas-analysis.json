@@ -1,0 +1,123 @@
+{
+  "projectType": "saas",
+  "projectName": "Frappe Wiki",
+  "projectDescription": "Open source wiki and knowledge base platform built on Frappe Framework",
+  "theme": "palm",
+  "primaryColor": "#3B82F6",
+  "lightColor": "#60A5FA",
+  "darkColor": "#2563EB",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/wiki-spaces",
+              "features/wiki-documents",
+              "features/change-requests",
+              "features/collaboration",
+              "features/search",
+              "features/attachments"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guides/creating-content",
+              "guides/organizing-pages",
+              "guides/markdown-support",
+              "guides/review-workflow",
+              "guides/publishing"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/overview",
+              "architecture/data-model",
+              "architecture/doctypes",
+              "architecture/frontend"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "REST API",
+            "pages": [
+              "api/overview",
+              "api/authentication",
+              "api/change-requests",
+              "api/wiki-spaces",
+              "api/documents"
+            ]
+          },
+          {
+            "group": "Python API",
+            "pages": [
+              "api/python/wiki-document",
+              "api/python/wiki-space",
+              "api/python/change-request",
+              "api/python/revision"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Deployment",
+        "groups": [
+          {
+            "group": "Setup",
+            "pages": [
+              "deployment/self-hosting",
+              "deployment/frappe-cloud",
+              "deployment/requirements"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "deployment/settings",
+              "deployment/custom-scripts",
+              "deployment/search-setup"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Create and organize wiki pages with hierarchical structure",
+    "GitBook-style change requests with review workflow",
+    "Real-time collaboration with multiple contributors",
+    "Markdown support with rich text editor",
+    "Full-text search with RedisSearch",
+    "Revision history and 3-way merge",
+    "File attachments and media support",
+    "Custom scripts and extensibility"
+  ],
+  "publicApiSurface": [
+    "wiki.api.change_requests.get_my_change_requests()",
+    "wiki.api.change_requests.create_change_request()",
+    "wiki.api.wiki_space.get_wiki_tree()",
+    "wiki.frappe_wiki.doctype.wiki_document.wiki_document.WikiDocumentRenderer",
+    "wiki.frappe_wiki.doctype.wiki_change_request.wiki_change_request.diff_change_request()",
+    "POST /api/method/wiki.api.change_requests.get_my_change_requests",
+    "POST /api/method/wiki.api.wiki_space.get_wiki_tree",
+    "WikiDocument.get_web_context()",
+    "WikiSpace.get_tree()",
+    "WikiChangeRequest.merge()"
+  ]
+}
